@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Precificação</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+
+  
+</head>
+<body>
+
+  <!-- CABEÇALHO -->
+  <header class="header">
+    <p class="header__eyebrow">Ferramenta de precificação</p>
+    <h1 class="header__title">Calculadora de Precificação</h1>
+    <p class="header__desc">Descubra o preço de custo, preço mínimo e preço ideal de venda do seu produto.</p>
+  </header>
+
+  <main class="calc">
+
+    <!-- ============================
+         ETAPA 1 — PRODUTO E INSUMOS
+    ============================ -->
+    <section class="card card--1">
+      <div class="card__head">
+        <span class="card__tag">Etapa 1</span>
+        <h2 class="card__title">Produto</h2>
+      </div>
+      <div class="card__body">
+
+        <!-- Nome do produto (separado dos insumos) -->
+        <div class="field">
+          <label class="lbl" for="nome-produto">Nome do produto</label>
+          <input class="inp" type="text" id="nome-produto" placeholder="Ex: Bolo de chocolate" oninput="onNomeProdutoChange(this.value)" />
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="section-lbl">Insumos utilizados</p>
+
+        <div id="insumos-list" class="insumos-list"></div>
+        <p id="empty-insumo" class="empty">Nenhum insumo adicionado ainda.</p>
+
+        <button class="btn-add btn-add--blue" onclick="addInsumo()">+ Adicionar insumo</button>
+
+        <div class="total-insumos">
+          <span class="total-insumos__lbl">Custo total dos insumos</span>
+          <span class="total-insumos__val" id="total-insumos">R$ 0,00</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================
+         ETAPA 2 — DESPESAS FIXAS
+    ============================ -->
+    <section class="card card--2">
+      <div class="card__head">
+        <span class="card__tag">Etapa 2</span>
+        <h2 class="card__title">Despesas Fixas</h2>
+      </div>
+      <div class="card__body">
+
+        <!-- Mão de obra -->
+        <p class="section-lbl">Mão de obra</p>
+        <div class="field">
+          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
+          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Custos fixos mensais — dinâmico -->
+        <p class="section-lbl">Custos fixos mensais</p>
+
+        <div id="cf-list" class="cf-list"></div>
+        <p id="empty-cf" class="empty" style="padding:10px 0 8px;">Nenhum custo fixo adicionado.</p>
+
+        <button class="btn-add btn-add--purple" onclick="addCustoFixo()" style="margin-bottom:12px;">
+          + Adicionar custo fixo
+        </button>
+
+        <!-- Total mensal (apenas informativo) -->
+        <div class="cf-total">
+          <div class="cf-total__row">
+            <span class="cf-total__lbl">Total mensal</span>
+            <span class="cf-total__val" id="cf-mensal">R$ 0,00</span>
+          </div>
+        </div>
+        <p class="hint">Use esse total como referência para definir o percentual de rateio abaixo.</p>
+
+        <!-- Rateio percentual sobre as despesas fixas -->
+        <div class="field" style="margin-top:14px;">
+          <label class="lbl" for="rateio-pct">Rateio sobre despesas fixas (%)</label>
+          <input class="inp" type="number" id="rateio-pct" placeholder="5" min="0" step="0.1" value="5" />
+          <p class="hint">Sugestão: 5%. Esse percentual é aplicado somente sobre as despesas fixas mensais.</p>
+        </div>
+
+        <div class="rateio-preview">
+          <div class="rateio-preview__row">
+            <span class="rateio-preview__lbl">Valor rateado</span>
+            <span class="rateio-preview__val" id="rateio-valor">R$ 0,00</span>
+          </div>
+          <div class="rateio-preview__formula" id="rateio-formula">5% sobre R$ 0,00</div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Impostos -->
+        <p class="section-lbl">Impostos</p>
+        <div class="field">
+          <label class="lbl" for="impostos">Alíquota (%)</label>
+          <input class="inp" type="number" id="impostos" placeholder="0" min="0" max="100" step="0.1" />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================
+         ETAPA 3 — RESULTADO
+    ============================ -->
+    <section class="card card--3">
+      <div class="card__head">
+        <span class="card__tag">Etapa 3</span>
+        <h2 class="card__title">Resultado</h2>
+        <span class="card__title-sub" id="produto-nome-display"></span>
+      </div>
+      <div class="card__body">
+
+        <div class="results" style="margin-bottom:18px;">
+          <div class="result result--custo">
+            <div class="result__lbl">Preço de custo</div>
+            <div class="result__val" id="r-custo">R$ 0,00</div>
+            <div class="result__sub">Insumos + Mão de obra + Rateio</div>
+          </div>
+
+          <div class="result result--minimo">
+            <div class="result__lbl">Preço mínimo de venda</div>
+            <div class="result__val" id="r-minimo">R$ 0,00</div>
+            <div class="result__sub" id="r-minimo-sub">Custo + impostos (0%)</div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="section-lbl">Cenários de margem de lucro</p>
+
+        <div class="scenario-grid">
+
+          <!-- Cenário 1 -->
+          <div class="scenario">
+            <span class="scenario__title">Opção 1</span>
+            <div class="field">
+              <label class="lbl" for="margem1">Margem (%)</label>
+              <input class="inp" type="number" id="margem1" placeholder="30" min="0" step="0.1" value="30" />
+            </div>
+            <div class="result result--ideal">
+              <div class="result__lbl">Preço ideal</div>
+              <div class="result__val" id="r-ideal-1">R$ 0,00</div>
+            </div>
+            <div class="result result--lucro">
+              <div class="result__lbl">Lucro</div>
+              <div class="result__val" id="r-lucro-1">R$ 0,00</div>
+              <div class="result__sub" id="r-lucro-1-pct">0,0%</div>
+            </div>
+          </div>
+
+          <!-- Cenário 2 -->
+          <div class="scenario">
+            <span class="scenario__title">Opção 2</span>
+            <div class="field">
+              <label class="lbl" for="margem2">Margem (%)</label>
+              <input class="inp" type="number" id="margem2" placeholder="50" min="0" step="0.1" value="50" />
+            </div>
+            <div class="result result--ideal">
+              <div class="result__lbl">Preço ideal</div>
+              <div class="result__val" id="r-ideal-2">R$ 0,00</div>
+            </div>
+            <div class="result result--lucro">
+              <div class="result__lbl">Lucro</div>
+              <div class="result__val" id="r-lucro-2">R$ 0,00</div>
+              <div class="result__sub" id="r-lucro-2-pct">0,0%</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Desenvolvido por <a href="https://github.com/luisnunes" target="_blank" rel="noopener noreferrer">Luis Nunes</a></p>
+  </footer>
+
+  <script>
+/* =====================================================================
+   CALCULADORA DE PRECIFICAÇÃO — LÓGICA DA APLICAÇÃO
+   Organizado em: estado, utilitários, Etapa 1 (insumos),
+   Etapa 2 (despesas fixas), cálculo principal, listeners e
+   inicialização.
+===================================================================== */
+
+/* ---------------------------------------------------------------------
+   ESTADO DA APLICAÇÃO
+   Guardamos os insumos e os custos fixos em arrays na memória.
+   Cada item tem um "id" único (gerado por um contador incremental)
+   para podermos identificar, atualizar e remover linhas específicas.
+--------------------------------------------------------------------- */
+let insumos      = [];  /* [{ id, nome, vTotal, qtdAdq, qtdUsa, custo }] */
+let custosFixos  = [];  /* [{ id, nome, valor }] */
+let nextInsumoId = 0;   /* contador para gerar IDs únicos de insumo */
+let nextCFId     = 0;   /* contador para gerar IDs únicos de custo fixo */
+
+
+/* =========================================================
+   UTILITÁRIOS
+   Funções pequenas e genéricas, usadas em vários pontos do código.
+========================================================= */
+
+/**
+ * Formata um número como moeda brasileira (R$ 1.234,56).
+ * @param {number} v - valor numérico a formatar
+ * @returns {string} valor formatado em BRL
+ */
+function brl(v) {
+  return Number(v).toLocaleString('pt-BR', {
+    style: 'currency', currency: 'BRL',
+    minimumFractionDigits: 2, maximumFractionDigits: 2
+  });
+}
+
+/**
+ * Converte uma string digitada pelo usuário em número, de forma robusta.
+ * Aceita tanto ponto quanto vírgula como separador decimal, o que é
+ * essencial porque no Brasil as pessoas digitam "0,5" e não "0.5".
+ *
+ * Exemplos:
+ *   "1.500,50" → 1500.50  (formato BR: ponto de milhar + vírgula decimal)
+ *   "0,5"      → 0.5      (vírgula como decimal)
+ *   "10.5"     → 10.5     (ponto como decimal)
+ *
+ * @param {string|number} v - valor bruto vindo do input
+ * @returns {number} número válido (nunca negativo, nunca NaN)
+ */
+function parseNum(v) {
+  if (typeof v === 'number') return isNaN(v) ? 0 : Math.max(0, v);
+
+  const s = String(v).trim();
+  if (s === '') return 0;
+
+  let normalized;
+
+  /* Se o formato bate com o padrão brasileiro (ex: 1.500,50),
+     remove os pontos de milhar e troca a vírgula decimal por ponto. */
+  if (/^\d{1,3}(\.\d{3})*(,\d+)?$/.test(s)) {
+    normalized = s.replace(/\./g, '').replace(',', '.');
+  } else {
+    /* Caso contrário, apenas troca a primeira vírgula por ponto
+       (cobre o caso simples de "0,5" digitado num input number) */
+    normalized = s.replace(',', '.');
+  }
+
+  const n = parseFloat(normalized);
+  return isNaN(n) ? 0 : Math.max(0, n);
+}
+
+/**
+ * Atualiza o texto de um elemento pelo ID e dispara uma animação
+ * de "flash" para dar feedback visual de que o valor mudou.
+ * @param {string} id - id do elemento HTML a atualizar
+ * @param {string} texto - novo conteúdo de texto
+ */
+function set(id, texto) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = texto;
+  el.classList.remove('flashed');
+  void el.offsetWidth; /* força o navegador a "esquecer" a animação anterior */
+  el.classList.add('flashed');
+}
+
+/**
+ * Reflete o nome do produto digitado na Etapa 1 como um subtítulo
+ * discreto ao lado do título "Resultado" na Etapa 3. Puramente
+ * cosmético, não entra em nenhum cálculo.
+ * @param {string} valor - valor atual do campo "Nome do produto"
+ */
+function onNomeProdutoChange(valor) {
+  const el = document.getElementById('produto-nome-display');
+  const v = valor.trim();
+  if (v) {
+    el.textContent = '— ' + v;
+    el.style.display = 'inline';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+
+/* =========================================================
+   ETAPA 1 — INSUMOS
+   CRUD (criar, atualizar, remover) da lista de insumos que compõem
+   o produto, mais a renderização dessa lista no DOM.
+========================================================= */
+
+/**
+ * Adiciona um insumo vazio ao array e re-renderiza a lista.
+ * Chamado pelo botão "+ Adicionar insumo".
+ */
+function addInsumo() {
+  insumos.push({ id: nextInsumoId++, nome: '', vTotal: 0, qtdAdq: 0, qtdUsa: 0, custo: 0 });
+  renderInsumos();
+  calcular();
+}
+
+/**
+ * Remove um insumo do array pelo ID e re-renderiza a lista.
+ * @param {number} id - id do insumo a remover
+ */
+function rmInsumo(id) {
+  insumos = insumos.filter(i => i.id !== id);
+  renderInsumos();
+  calcular();
+}
+
+/**
+ * Atualiza um campo específico de um insumo (nome, valor pago,
+ * quantidade comprada ou usada) e recalcula o custo individual dele.
+ *
+ * Importante: esta função NÃO re-renderiza a lista inteira — ela só
+ * atualiza o texto do custo calculado daquele insumo. Isso evita que
+ * o input perca o foco enquanto o usuário está digitando.
+ *
+ * Fórmula do custo do insumo:
+ *   custo = (valor total pago ÷ quantidade comprada) × quantidade usada
+ *
+ * @param {number} id - id do insumo sendo editado
+ * @param {string} campo - 'nome' | 'vTotal' | 'qtdAdq' | 'qtdUsa'
+ * @param {string|number} valor - novo valor digitado no campo
+ */
+function upInsumo(id, campo, valor) {
+  const ins = insumos.find(i => i.id === id);
+  if (!ins) return;
+
+  /* "nome" é texto puro, os demais campos são numéricos */
+  ins[campo] = (campo === 'nome') ? valor : parseNum(valor);
+
+  /* Recalcula o custo deste insumo específico */
+  ins.custo = ins.qtdAdq > 0
+    ? (ins.vTotal / ins.qtdAdq) * ins.qtdUsa
+    : 0;
+
+  /* Atualiza só o "card" de custo deste insumo, sem re-renderizar tudo */
+  const el = document.getElementById('ir-' + id);
+  if (el) el.textContent = brl(ins.custo);
+
+  /* Propaga a mudança para o cálculo geral (totais e preços finais) */
+  calcular();
+}
+
+/**
+ * Re-renderiza a lista completa de insumos no DOM.
+ * Só é chamada quando um insumo é adicionado ou removido — edições de
+ * campo usam upInsumo() para evitar perda de foco durante a digitação.
+ */
+function renderInsumos() {
+  const list  = document.getElementById('insumos-list');
+  const empty = document.getElementById('empty-insumo');
+
+  /* Mostra a mensagem de "lista vazia" só quando não há insumos */
+  empty.style.display = insumos.length === 0 ? 'block' : 'none';
+
+  list.innerHTML = insumos.map(ins => `
+    <div class="insumo" id="ins-${ins.id}">
+
+      <button class="btn-rm" onclick="rmInsumo(${ins.id})" title="Remover insumo" aria-label="Remover insumo">✕</button>
+
+      <div class="field">
+        <label class="lbl">Nome do insumo</label>
+        <input
+          class="inp" type="text" placeholder="Ex: Farinha, Embalagem…"
+          value="${ins.nome.replace(/"/g, '&quot;')}"
+          oninput="upInsumo(${ins.id}, 'nome', this.value)"
+        />
+      </div>
+
+      <div class="insumo__grid">
+
+        <div class="field">
+          <label class="lbl">Valor total pago (R$)</label>
+          <input
+            class="inp" type="number" inputmode="decimal"
+            placeholder="Ex: 10,00" min="0" step="0.01"
+            value="${ins.vTotal || ''}"
+            oninput="upInsumo(${ins.id}, 'vTotal', this.value)"
+          />
+        </div>
+
+        <div class="field">
+          <label class="lbl">Qtd. comprada</label>
+          <input
+            class="inp" type="number" inputmode="decimal"
+            placeholder="Ex: 5 (kg/un/L…)" min="0" step="any"
+            value="${ins.qtdAdq || ''}"
+            oninput="upInsumo(${ins.id}, 'qtdAdq', this.value)"
+          />
+        </div>
+
+        <div class="field">
+          <label class="lbl">Qtd. usada na produção</label>
+          <input
+            class="inp" type="number" inputmode="decimal"
+            placeholder="Ex: 0,5" min="0" step="any"
+            value="${ins.qtdUsa || ''}"
+            oninput="upInsumo(${ins.id}, 'qtdUsa', this.value)"
+          />
+        </div>
+
+        <div class="insumo__result-cell">
+          <span class="lbl">Custo calculado</span>
+          <div class="insumo__result-val" id="ir-${ins.id}">${brl(ins.custo)}</div>
+        </div>
+
+      </div>
+    </div>
+  `).join('');
+}
+
+
+/* =========================================================
+   ETAPA 2 — DESPESAS FIXAS
+   CRUD da lista de despesas fixas mensais (aluguel, energia, etc.)
+   mais a renderização dessa lista no DOM.
+========================================================= */
+
+/**
+ * Adiciona uma despesa fixa vazia ao array e re-renderiza a lista.
+ * Chamado pelo botão "+ Adicionar custo fixo".
+ */
+function addCustoFixo() {
+  custosFixos.push({ id: nextCFId++, nome: '', valor: 0 });
+  renderCustosFixos();
+  calcular();
+}
+
+/**
+ * Remove uma despesa fixa do array pelo ID e re-renderiza a lista.
+ * @param {number} id - id da despesa fixa a remover
+ */
+function rmCustoFixo(id) {
+  custosFixos = custosFixos.filter(c => c.id !== id);
+  renderCustosFixos();
+  calcular();
+}
+
+/**
+ * Atualiza um campo (nome ou valor) de uma despesa fixa.
+ * Assim como em upInsumo(), não re-renderiza o DOM inteiro para não
+ * tirar o foco do input enquanto o usuário digita.
+ * @param {number} id - id da despesa fixa sendo editada
+ * @param {string} campo - 'nome' | 'valor'
+ * @param {string|number} valor - novo valor digitado no campo
+ */
+function upCustoFixo(id, campo, valor) {
+  const c = custosFixos.find(c => c.id === id);
+  if (!c) return;
+  c[campo] = (campo === 'nome') ? valor : parseNum(valor);
+  calcular();
+}
+
+/**
+ * Re-renderiza a lista completa de despesas fixas no DOM.
+ * Só é chamada ao adicionar ou remover itens.
+ */
+function renderCustosFixos() {
+  const list  = document.getElementById('cf-list');
+  const empty = document.getElementById('empty-cf');
+
+  empty.style.display = custosFixos.length === 0 ? 'block' : 'none';
+
+  list.innerHTML = custosFixos.map(c => `
+    <div class="cf-item" id="cf-${c.id}">
+      <input
+        class="inp" type="text" placeholder="Ex: Aluguel, Energia…"
+        value="${c.nome.replace(/"/g, '&quot;')}"
+        oninput="upCustoFixo(${c.id}, 'nome', this.value)"
+      />
+      <input
+        class="inp inp--val" type="number" inputmode="decimal"
+        placeholder="R$ 0,00" min="0" step="0.01"
+        value="${c.valor || ''}"
+        oninput="upCustoFixo(${c.id}, 'valor', this.value)"
+      />
+      <button class="btn-rm" style="position:relative;top:0;right:0;" onclick="rmCustoFixo(${c.id})" title="Remover" aria-label="Remover custo fixo">✕</button>
+    </div>
+  `).join('');
+}
+
+
+/* =========================================================
+   CÁLCULO PRINCIPAL
+   Função central que lê todos os campos, recalcula os valores
+   e atualiza a interface inteira em tempo real.
+========================================================= */
+
+/**
+ * Recalcula todos os valores derivados (totais, preços e lucros) e
+ * atualiza todos os elementos de resultado na tela.
+ * É chamada sempre que QUALQUER campo relevante muda — insumos,
+ * despesas fixas, mão de obra, rateio, impostos ou margens.
+ *
+ * Fórmulas aplicadas:
+ *   totalInsumos = soma do custo de todos os insumos
+ *   baseCusto    = totalInsumos + mão de obra
+ *   rateioValor  = baseCusto × (percentual de rateio ÷ 100)
+ *   precoCusto   = baseCusto + rateioValor
+ *   precoMinimo  = precoCusto × (1 + imposto ÷ 100)
+ *   precoIdeal_N = precoMinimo × (1 + margemN ÷ 100)   [N = 1 ou 2]
+ *   lucro_N      = precoIdeal_N − precoCusto
+ *   lucroRel_N   = (lucro_N ÷ precoIdeal_N) × 100
+ */
+function calcular() {
+  /* --- Leitura dos campos simples --- */
+  const maoObra   = parseNum(document.getElementById('mao-obra').value);
+  const rateioPct = parseNum(document.getElementById('rateio-pct').value);
+  const imposto   = parseNum(document.getElementById('impostos').value);
+  const margem1   = parseNum(document.getElementById('margem1').value);
+  const margem2   = parseNum(document.getElementById('margem2').value);
+
+  /* --- Etapa 1: soma de todos os insumos --- */
+  const totalInsumos = insumos.reduce((s, i) => s + i.custo, 0);
+
+  /* --- Etapa 2: total mensal das despesas fixas ---
+     esse valor agora é a base do rateio percentual --- */
+  const totalCFMens = custosFixos.reduce((s, c) => s + c.valor, 0);
+
+  /* --- Base de custo do produto e rateio sobre despesas fixas --- */
+  const baseCusto   = totalInsumos + maoObra;
+  const rateioValor = totalCFMens * (rateioPct / 100);
+
+  /* --- Preços finais --- */
+  const precoCusto  = baseCusto + rateioValor;
+  const precoMinimo = precoCusto * (1 + imposto / 100);
+
+  /* --- Cenário 1 de margem de lucro --- */
+  const precoIdeal1 = precoMinimo * (1 + margem1 / 100);
+  const lucro1       = precoIdeal1 - precoCusto;
+  const lucroRel1     = precoIdeal1 > 0 ? (lucro1 / precoIdeal1) * 100 : 0;
+
+  /* --- Cenário 2 de margem de lucro --- */
+  const precoIdeal2 = precoMinimo * (1 + margem2 / 100);
+  const lucro2       = precoIdeal2 - precoCusto;
+  const lucroRel2     = precoIdeal2 > 0 ? (lucro2 / precoIdeal2) * 100 : 0;
+
+  /* --- Atualiza os displays da Etapa 1 e Etapa 2 --- */
+  set('total-insumos', brl(totalInsumos));
+  set('cf-mensal',      brl(totalCFMens));
+  set('rateio-valor',   brl(rateioValor));
+  document.getElementById('rateio-formula').textContent =
+    `${rateioPct}% sobre ${brl(totalCFMens)}`;
+
+  /* --- Atualiza os displays da Etapa 3 --- */
+  set('r-custo',  brl(precoCusto));
+  set('r-minimo', brl(precoMinimo));
+  document.getElementById('r-minimo-sub').textContent =
+    `Custo + impostos (${imposto}%)`;
+
+  set('r-ideal-1', brl(precoIdeal1));
+  set('r-lucro-1', brl(lucro1));
+  document.getElementById('r-lucro-1-pct').textContent =
+    `${lucroRel1.toFixed(1)}% sobre o preço ideal`;
+
+  set('r-ideal-2', brl(precoIdeal2));
+  set('r-lucro-2', brl(lucro2));
+  document.getElementById('r-lucro-2-pct').textContent =
+    `${lucroRel2.toFixed(1)}% sobre o preço ideal`;
+}
+
+
+/* =========================================================
+   EVENT LISTENERS — campos simples
+   Os campos que não fazem parte de listas dinâmicas (mão de obra,
+   rateio, impostos e as duas margens) recalculam tudo a cada
+   alteração, em tempo real.
+========================================================= */
+['mao-obra', 'rateio-pct', 'impostos', 'margem1', 'margem2'].forEach(id =>
+  document.getElementById(id).addEventListener('input', calcular)
+);
+
+
+/* =========================================================
+   INICIALIZAÇÃO
+   Ao carregar a página, já deixamos um insumo e um custo fixo
+   pré-criados para guiar o usuário, e disparamos o primeiro cálculo.
+========================================================= */
+addInsumo();      /* um insumo pré-carregado */
+addCustoFixo();   /* um custo fixo pré-carregado */
+calcular();        /* calcula os valores iniciais (tudo zerado) */
+
+  </script>
+</body>
+</html>

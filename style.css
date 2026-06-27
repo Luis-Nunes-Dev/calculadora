@@ -1,0 +1,538 @@
+/* =====================================================================
+   CALCULADORA DE PRECIFICAÇÃO — FOLHA DE ESTILOS
+   Organizado por seção: tokens, base, cabeçalho, layout, cards,
+   formulários, etapa 1 (insumos), etapa 2 (despesas fixas),
+   etapa 3 (resultado), animações, responsivo e rodapé.
+===================================================================== */
+
+/* ---------------------------------------------------------------------
+   TOKENS
+   Variáveis globais de cor, tipografia e espaçamento. Centralizar aqui
+   facilita trocar a paleta inteira da calculadora sem editar o resto.
+--------------------------------------------------------------------- */
+:root {
+  --bg:        #EEF1F7;   /* fundo geral da página */
+  --surface:   #FFFFFF;   /* fundo dos cards */
+  --border:    #D4D9E8;   /* borda padrão de inputs */
+  --border-lt: #E8ECF4;   /* borda mais clara (divisores, cards internos) */
+
+  /* Cor de identidade de cada etapa (badges "Etapa 1/2/3") */
+  --step1: #2563EB;   /* azul   — Etapa 1, Produto/Insumos */
+  --step2: #7C3AED;   /* violeta — Etapa 2, Despesas Fixas */
+  --step3: #0F172A;   /* navy    — Etapa 3, Resultado */
+
+  /* Cores semânticas dos blocos de resultado final */
+  --c-custo:  #64748B;  /* cinza   — preço de custo */
+  --c-minimo: #D97706;  /* laranja — preço mínimo */
+  --c-ideal:  #16A34A;  /* verde   — preço ideal */
+  --c-lucro:  #2563EB;  /* azul    — lucro estimado */
+  --c-danger: #EF4444;  /* vermelho — ações destrutivas (remover) */
+
+  /* Texto */
+  --text:  #0F172A;
+  --muted: #64748B;
+  --faint: #94A3B8;
+
+  /* Tipografia: sans para textos de interface, mono para números/valores */
+  --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Raio de borda padrão */
+  --r:  12px;  /* cards */
+  --rs: 7px;   /* elementos internos (inputs, botões, caixas) */
+
+  --shadow: 0 1px 3px rgba(15,23,42,.05), 0 6px 20px rgba(15,23,42,.06);
+}
+
+/* ---------------------------------------------------------------------
+   RESET & BASE
+   Zera margens/paddings padrão do navegador e define a base tipográfica
+   e de cor do body.
+--------------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-bottom: 64px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------------
+   CABEÇALHO
+   Bloco de título no topo da página com o nome da calculadora e a
+   descrição curta do que ela faz.
+--------------------------------------------------------------------- */
+.header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-lt);
+  padding: 30px 24px 26px;
+  text-align: center;
+}
+.header__eyebrow {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--step1);
+  margin-bottom: 8px;
+}
+.header__title {
+  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-weight: 700;
+  letter-spacing: -.03em;
+  color: var(--text);
+}
+.header__desc {
+  margin-top: 6px;
+  font-size: .875rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ---------------------------------------------------------------------
+   GRID PRINCIPAL
+   Container que organiza as 3 etapas lado a lado no desktop (a coluna
+   da Etapa 1 é levemente maior porque acumula mais campos dinâmicos).
+   Em telas menores que 960px, vira uma coluna só (ver bloco RESPONSIVO).
+--------------------------------------------------------------------- */
+.calc {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 20px;
+  max-width: 1320px;
+  margin: 28px auto;
+  padding: 0 20px;
+  align-items: start;
+}
+
+/* ---------------------------------------------------------------------
+   CARDS
+   Estrutura visual compartilhada pelas 3 etapas: cabeçalho do card
+   (badge + título) e corpo com o conteúdo/formulário.
+--------------------------------------------------------------------- */
+.card {
+  background: var(--surface);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card__head {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-lt);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.card__tag {
+  font-family: var(--mono);
+  font-size: .58rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #fff;
+  flex-shrink: 0;
+}
+/* Cada card recebe a cor da sua etapa através do modificador --1/--2/--3 */
+.card--1 .card__tag { background: var(--step1); }
+.card--2 .card__tag { background: var(--step2); }
+.card--3 .card__tag { background: var(--step3); }
+.card__title {
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+/* Subtítulo dinâmico ao lado do título (mostra o nome do produto digitado) */
+.card__title-sub {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--muted);
+  font-style: italic;
+  display: none; /* só aparece via JS quando há nome de produto preenchido */
+}
+.card__body { padding: 20px; }
+
+/* ---------------------------------------------------------------------
+   FORMULÁRIO BASE
+   Estilos genéricos de campo/label/input reaproveitados em todas as
+   etapas, para manter consistência visual entre os formulários.
+--------------------------------------------------------------------- */
+.field { display: flex; flex-direction: column; gap: 4px; }
+.field + .field { margin-top: 12px; }
+.lbl {
+  font-size: .67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+}
+/* Texto de ajuda pequeno, usado para sugestões e explicações de fórmula */
+.hint {
+  font-size: .7rem;
+  color: var(--faint);
+  margin-top: 2px;
+}
+.inp {
+  font-family: var(--mono);
+  font-size: .875rem;
+  padding: 9px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  color: var(--text);
+  background: #FAFBFD;
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.inp:focus {
+  outline: none;
+  background: #fff;
+  border-color: var(--step1);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.11);
+}
+/* Remove as setinhas (spinners) padrão dos inputs numéricos */
+.inp[type=number]                            { -moz-appearance: textfield; }
+.inp[type=number]::-webkit-inner-spin-button,
+.inp[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+/* ---------------------------------------------------------------------
+   DIVISOR E RÓTULO DE SEÇÃO
+   Usados para separar blocos de conteúdo dentro de um mesmo card
+   (ex: separar "Mão de obra" de "Despesas fixas mensais").
+--------------------------------------------------------------------- */
+.divider     { height: 1px; background: var(--border-lt); margin: 18px 0; }
+.section-lbl {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--faint);
+  margin-bottom: 10px;
+}
+
+/* ---------------------------------------------------------------------
+   BOTÃO REMOVER (compartilhado)
+   Botão "✕" usado tanto nos insumos quanto nos custos fixos para
+   remover um item da lista dinâmica.
+--------------------------------------------------------------------- */
+.btn-rm {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 22px; height: 22px;
+  border: none; background: none; cursor: pointer;
+  color: var(--faint);
+  font-size: .85rem;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .15s, background .15s;
+  flex-shrink: 0;
+}
+.btn-rm:hover { color: var(--c-danger); background: #FEF2F2; }
+
+/* ---------------------------------------------------------------------
+   BOTÃO ADICIONAR (compartilhado)
+   Botão de borda pontilhada para adicionar um novo insumo ou um novo
+   custo fixo. A cor varia conforme a etapa (azul ou violeta).
+--------------------------------------------------------------------- */
+.btn-add {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  width: 100%;
+  padding: 9px 14px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--rs);
+  background: transparent;
+  font-family: var(--sans);
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.btn-add--blue   { color: var(--step1); }
+.btn-add--blue:hover   { border-color: var(--step1); background: #EFF6FF; border-style: solid; }
+.btn-add--purple { color: var(--step2); }
+.btn-add--purple:hover { border-color: var(--step2); background: #F5F3FF; border-style: solid; }
+
+/* Mensagem exibida quando uma lista dinâmica está vazia */
+.empty {
+  text-align: center;
+  padding: 16px;
+  color: var(--faint);
+  font-size: .82rem;
+}
+
+/* ---------------------------------------------------------------------
+   ETAPA 1 — PRODUTO E INSUMOS
+   Cada "insumo" é um cartão interno com nome, valor pago, quantidade
+   comprada/usada e o custo calculado automaticamente.
+--------------------------------------------------------------------- */
+.insumos-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+.insumo {
+  border: 1.5px solid var(--border-lt);
+  border-radius: var(--rs);
+  padding: 14px 14px 12px;
+  background: #FAFBFD;
+  position: relative; /* necessário para posicionar o botão remover */
+}
+
+/* Grid 2×2 dentro de cada insumo:
+   [Valor pago]      [Qtd comprada]
+   [Qtd usada]        [Custo calculado] */
+.insumo__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  align-items: start;
+}
+.insumo__grid .field {
+  margin-top: 0;
+}
+
+/* Célula que exibe o custo calculado do insumo (estilo "somente leitura") */
+.insumo__result-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: flex-end;
+}
+.insumo__result-cell .lbl { color: var(--step1); opacity: .85; }
+.insumo__result-val {
+  font-family: var(--mono);
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--step1);
+  padding: 9px 11px;
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--rs);
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+/* Faixa de destaque com o custo total somando todos os insumos */
+.total-insumos {
+  margin-top: 14px;
+  padding: 13px 16px;
+  background: var(--step1);
+  border-radius: var(--rs);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.total-insumos__lbl {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: rgba(255,255,255,.75);
+}
+.total-insumos__val {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------------
+   ETAPA 2 — DESPESAS FIXAS
+   Lista dinâmica de despesas fixas mensais (aluguel, energia, etc.),
+   painel informativo do total mensal, e o bloco de rateio percentual
+   aplicado sobre o custo do produto.
+--------------------------------------------------------------------- */
+.cf-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+
+/* Cada linha de despesa fixa: nome + valor + botão remover, lado a lado */
+.cf-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  background: #FAF8FF;
+  border: 1.5px solid var(--border-lt);
+  border-radius: var(--rs);
+  padding: 10px 36px 10px 12px; /* padding-right maior para caber o botão ✕ */
+  position: relative;
+}
+.cf-item .inp { background: transparent; border-color: transparent; padding: 6px 8px; }
+.cf-item .inp:focus { background: #fff; border-color: var(--step2); box-shadow: 0 0 0 3px rgba(124,58,237,.1); }
+.cf-item .inp--val { width: 110px; text-align: right; }
+
+/* Painel que mostra o total mensal somado — apenas informativo, não
+   entra diretamente na fórmula de preço (ver script.js > calcular()) */
+.cf-total {
+  border: 1.5px solid #DDD6FE;
+  border-radius: var(--rs);
+  overflow: hidden;
+}
+.cf-total__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 14px;
+}
+.cf-total__lbl {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--step2);
+  opacity: .8;
+}
+.cf-total__val {
+  font-family: var(--mono);
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--step2);
+}
+
+/* Painel de preview do rateio percentual: mostra quanto, em R$, o
+   percentual escolhido representa sobre a base de custo do produto */
+.rateio-preview {
+  margin-top: 10px;
+  padding: 10px 14px;
+  background: #F5F3FF;
+  border: 1.5px solid #DDD6FE;
+  border-radius: var(--rs);
+}
+.rateio-preview__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rateio-preview__lbl {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--step2);
+}
+.rateio-preview__val {
+  font-family: var(--mono);
+  font-size: .95rem;
+  font-weight: 500;
+  color: var(--step2);
+}
+.rateio-preview__formula {
+  margin-top: 3px;
+  font-size: .7rem;
+  color: var(--faint);
+  font-family: var(--mono);
+}
+
+/* ---------------------------------------------------------------------
+   ETAPA 3 — RESULTADO
+   Blocos de resultado com borda lateral colorida (cinza/laranja/
+   verde/azul) e os dois cenários de margem de lucro lado a lado.
+--------------------------------------------------------------------- */
+.results { display: flex; flex-direction: column; gap: 11px; }
+
+.result {
+  padding: 13px 15px;
+  background: #FAFBFD;
+  border-radius: var(--rs);
+  border-left: 4px solid;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+/* Cor da borda lateral conforme o tipo de resultado */
+.result--custo  { border-left-color: var(--c-custo); }
+.result--minimo { border-left-color: var(--c-minimo); }
+.result--ideal  { border-left-color: var(--c-ideal); }
+.result--lucro  { border-left-color: var(--c-lucro); }
+
+.result__lbl {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 2px;
+}
+.result--custo  .result__lbl { color: var(--c-custo); }
+.result--minimo .result__lbl { color: var(--c-minimo); }
+.result--ideal  .result__lbl { color: var(--c-ideal); }
+.result--lucro  .result__lbl { color: var(--c-lucro); }
+
+.result__val {
+  font-family: var(--mono);
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.2;
+}
+/* Dentro dos cenários (mais estreitos), o valor fica um pouco menor */
+.result--ideal .result__val,
+.result--lucro .result__val { font-size: 1.05rem; }
+
+.result__sub {
+  font-size: .7rem;
+  color: var(--faint);
+  margin-top: 1px;
+  font-family: var(--mono);
+}
+
+/* Grid com as 2 opções de margem de lucro, lado a lado no desktop */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.scenario {
+  border: 1.5px solid var(--border-lt);
+  border-radius: var(--rs);
+  padding: 12px;
+  background: #FAFBFD;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.scenario__title {
+  font-size: .65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--faint);
+}
+.scenario .result { padding: 10px 12px; background: #fff; }
+
+/* ---------------------------------------------------------------------
+   ANIMAÇÃO DE ATUALIZAÇÃO
+   Pequeno efeito de "flash" aplicado via JS sempre que um valor
+   calculado é atualizado, para dar feedback visual de que recalculou.
+--------------------------------------------------------------------- */
+@keyframes flash {
+  from { opacity: .4; transform: translateY(-2px); }
+  to   { opacity: 1;  transform: translateY(0); }
+}
+.flashed { animation: flash .22s ease forwards; }
+
+/* ---------------------------------------------------------------------
+   RESPONSIVO
+   Abaixo de 960px as 3 etapas passam a ficar em coluna única.
+   Abaixo de 480px ajustes finos para telas de celular pequenas.
+--------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .calc { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .insumo__grid    { grid-template-columns: 1fr; }
+  .header__title   { font-size: 1.35rem; }
+  .scenario-grid   { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------------------
+   RODAPÉ
+--------------------------------------------------------------------- */
+.footer {
+  text-align: center;
+  margin-top: 48px;
+  font-size: .7rem;
+  color: var(--faint);
+}
+.footer a { color: var(--faint); text-decoration: none; }
+.footer a:hover { color: var(--step1); }
