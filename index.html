@@ -32,6 +32,9 @@
       </div>
       <div class="card__body">
 
+        <!-- Texto orientando o preenchimento da Etapa 1 -->
+        <p class="card__desc">Informe o nome do produto e os insumos utilizados na produção. Para cada insumo, preencha o valor pago e as quantidades comprada e utilizada — o custo de cada um será calculado automaticamente.</p>
+
         <!-- Nome do produto (separado dos insumos) -->
         <div class="field">
           <label class="lbl" for="nome-produto">Nome do produto</label>
@@ -94,6 +97,9 @@
         <h2 class="card__title">Despesas Fixas</h2>
       </div>
       <div class="card__body">
+
+        <!-- Texto orientando o preenchimento da Etapa 2 -->
+        <p class="card__desc">Informe a mão de obra e suas despesas mensais fixas (aluguel, energia, internet, etc.). O percentual de rateio distribui esses custos proporcionalmente sobre cada produto.</p>
 
         <!-- Mão de obra -->
         <p class="section-lbl">Mão de obra</p>
@@ -422,26 +428,23 @@ function upInsumo(id, campo, valor) {
  * confeitaria é ativado/desativado (pois os rótulos mudam).
  * Edições de campo numéricas/texto usam upInsumo() para evitar perda de foco.
  *
- * Layout: o campo Nome fica em linha própria (full-width) acima do grid.
- * O grid de 5 colunas contém: Valor | Unidade | Qtd comprada | Qtd usada | Custo.
+ * Layout: Nome do insumo em linha full-width, seguido de grid 2×2:
+ *   [Valor total pago]  [Qtd. comprada ]
+ *   [Qtd. usada]        [Custo calculado]
+ * No Modo Confeitaria os rótulos das colunas mudam para a nomenclatura de receita.
  */
 function renderInsumos() {
   const list  = document.getElementById('insumos-list');
   const empty = document.getElementById('empty-insumo');
   const modo  = document.getElementById('modo-confeitaria').checked;
 
-  /* Rótulos adaptativos conforme o modo ativo.
-     No modo confeitaria usam a nomenclatura de receita/lote.
-     Labels propositalmente curtos para caber nas colunas do grid. */
-  const lblNome = modo ? 'Ingrediente'   : 'Nome do insumo';
-  const lblVlr  = modo ? 'Valor (R$)'   : 'Valor (R$)';
-  const lblAdq  = modo ? 'Qtde total'   : 'Comprada';
-  const lblUsa  = modo ? 'Na receita'   : 'Usada';
-  const phAdq   = modo ? 'Ex: 500'      : 'Ex: 5';
-  const phUsa   = modo ? 'Ex: 100'      : 'Ex: 0,5';
-
-  /* Opções de unidade de medida */
-  const UNIDADES = ['un','g','kg','ml','L','m','cx','dz'];
+  /* Rótulos adaptativos: modo padrão vs. Confeitaria / Padaria */
+  const lblNome = modo ? 'Ingrediente'           : 'Nome do insumo';
+  const lblVlr  = modo ? 'Valor total pago (R$)' : 'Valor total pago (R$)';
+  const lblAdq  = modo ? 'Qtde total'            : 'Qtd. comprada';
+  const lblUsa  = modo ? 'Qtde na receita'       : 'Qtd. usada na produção';
+  const phAdq   = modo ? 'Ex: 500 (g/ml)'        : 'Ex: 5 (kg/un/L…)';
+  const phUsa   = modo ? 'Ex: 100 (g/ml)'        : 'Ex: 0,5';
 
   /* Mostra a mensagem de "lista vazia" só quando não há insumos */
   empty.style.display = insumos.length === 0 ? 'block' : 'none';
@@ -451,8 +454,8 @@ function renderInsumos() {
 
       <button class="btn-rm" onclick="rmInsumo(${ins.id})" title="Remover insumo" aria-label="Remover insumo">✕</button>
 
-      <!-- Nome: linha própria (full-width) para não comprimir o grid abaixo -->
-      <div class="field insumo__field--nome">
+      <!-- Nome do insumo — linha full-width acima do grid -->
+      <div class="field">
         <label class="lbl">${lblNome}</label>
         <input
           class="inp" type="text"
@@ -462,25 +465,17 @@ function renderInsumos() {
         />
       </div>
 
-      <!-- Grid de 5 colunas: Valor | Unidade | Comprada | Usada | Custo -->
-      <div class="insumo__row">
+      <!-- Grid 2×2: [Valor pago] [Qtd comprada] / [Qtd usada] [Custo calculado] -->
+      <div class="insumo__grid">
 
         <div class="field">
           <label class="lbl">${lblVlr}</label>
           <input
             class="inp" type="number" inputmode="decimal"
-            placeholder="0,00" min="0" step="0.01"
+            placeholder="Ex: 10,00" min="0" step="0.01"
             value="${ins.vTotal || ''}"
             oninput="upInsumo(${ins.id}, 'vTotal', this.value)"
           />
-        </div>
-
-        <div class="field">
-          <label class="lbl">Un.</label>
-          <select
-            class="inp inp--select"
-            onchange="upInsumo(${ins.id}, 'unidade', this.value)"
-          >${UNIDADES.map(u => `<option value="${u}" ${ins.unidade === u ? 'selected' : ''}>${u}</option>`).join('')}</select>
         </div>
 
         <div class="field">
@@ -504,7 +499,7 @@ function renderInsumos() {
         </div>
 
         <div class="insumo__result-cell">
-          <span class="lbl">Custo</span>
+          <span class="lbl">Custo calculado</span>
           <div class="insumo__result-val" id="ir-${ins.id}">${brl(ins.custo)}</div>
         </div>
 

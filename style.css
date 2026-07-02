@@ -274,7 +274,7 @@ body {
 .insumo {
   border: 1.5px solid var(--border-lt);
   border-radius: var(--rs);
-  padding: 12px 36px 12px 14px; /* padding-right extra para não sobrepor o botão ✕ */
+  padding: 14px 14px 12px;
   background: #FAFBFD;
   position: relative; /* necessário para posicionar o botão remover */
 }
@@ -664,4 +664,18 @@ body {
   color: var(--step1);
   opacity: .65;
   font-family: var(--mono);
+}
+
+
+/* ---------------------------------------------------------------------
+   TEXTO DESCRITIVO DO CARD (card__desc)
+   Parágrafo curto de orientação no topo do corpo dos cards da Etapa 1
+   e Etapa 2, logo após o cabeçalho. Mesmo estilo visual do restante
+   da interface: fonte pequena, cor suave, linha generosa.
+--------------------------------------------------------------------- */
+.card__desc {
+  font-size: .8rem;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 16px;
 }
