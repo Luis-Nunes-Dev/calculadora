@@ -421,21 +421,26 @@ function upInsumo(id, campo, valor) {
  * Só é chamada quando um insumo é adicionado, removido ou quando o modo
  * confeitaria é ativado/desativado (pois os rótulos mudam).
  * Edições de campo numéricas/texto usam upInsumo() para evitar perda de foco.
+ *
+ * Layout: o campo Nome fica em linha própria (full-width) acima do grid.
+ * O grid de 5 colunas contém: Valor | Unidade | Qtd comprada | Qtd usada | Custo.
  */
 function renderInsumos() {
   const list  = document.getElementById('insumos-list');
   const empty = document.getElementById('empty-insumo');
   const modo  = document.getElementById('modo-confeitaria').checked;
 
-  /* Rótulos e placeholders adaptativos conforme o modo ativo */
-  const lblNome = modo ? 'Ingrediente'         : 'Nome do insumo';
-  const lblVlr  = modo ? 'Valor pago (R$)'     : 'Valor total pago (R$)';
-  const lblAdq  = modo ? 'Qtde total'          : 'Qtd. comprada';
-  const lblUsa  = modo ? 'Qtde na receita'     : 'Qtd. usada';
-  const phAdq   = modo ? 'Ex: 500'             : 'Ex: 5';
-  const phUsa   = modo ? 'Ex: 100'             : 'Ex: 0,5';
+  /* Rótulos adaptativos conforme o modo ativo.
+     No modo confeitaria usam a nomenclatura de receita/lote.
+     Labels propositalmente curtos para caber nas colunas do grid. */
+  const lblNome = modo ? 'Ingrediente'   : 'Nome do insumo';
+  const lblVlr  = modo ? 'Valor (R$)'   : 'Valor (R$)';
+  const lblAdq  = modo ? 'Qtde total'   : 'Comprada';
+  const lblUsa  = modo ? 'Na receita'   : 'Usada';
+  const phAdq   = modo ? 'Ex: 500'      : 'Ex: 5';
+  const phUsa   = modo ? 'Ex: 100'      : 'Ex: 0,5';
 
-  /* Opções de unidade de medida disponíveis no select */
+  /* Opções de unidade de medida */
   const UNIDADES = ['un','g','kg','ml','L','m','cx','dz'];
 
   /* Mostra a mensagem de "lista vazia" só quando não há insumos */
@@ -446,31 +451,32 @@ function renderInsumos() {
 
       <button class="btn-rm" onclick="rmInsumo(${ins.id})" title="Remover insumo" aria-label="Remover insumo">✕</button>
 
-      <!-- Linha horizontal com todos os campos: nome | valor | unidade | qtd comprada | qtd usada | custo -->
-      <div class="insumo__row">
+      <!-- Nome: linha própria (full-width) para não comprimir o grid abaixo -->
+      <div class="field insumo__field--nome">
+        <label class="lbl">${lblNome}</label>
+        <input
+          class="inp" type="text"
+          placeholder="Ex: Farinha, Leite…"
+          value="${ins.nome.replace(/"/g, '&quot;')}"
+          oninput="upInsumo(${ins.id}, 'nome', this.value)"
+        />
+      </div>
 
-        <div class="field insumo__field--nome">
-          <label class="lbl">${lblNome}</label>
-          <input
-            class="inp" type="text"
-            placeholder="Ex: Farinha, Leite…"
-            value="${ins.nome.replace(/"/g, '&quot;')}"
-            oninput="upInsumo(${ins.id}, 'nome', this.value)"
-          />
-        </div>
+      <!-- Grid de 5 colunas: Valor | Unidade | Comprada | Usada | Custo -->
+      <div class="insumo__row">
 
         <div class="field">
           <label class="lbl">${lblVlr}</label>
           <input
             class="inp" type="number" inputmode="decimal"
-            placeholder="Ex: 10,00" min="0" step="0.01"
+            placeholder="0,00" min="0" step="0.01"
             value="${ins.vTotal || ''}"
             oninput="upInsumo(${ins.id}, 'vTotal', this.value)"
           />
         </div>
 
         <div class="field">
-          <label class="lbl">Unidade</label>
+          <label class="lbl">Un.</label>
           <select
             class="inp inp--select"
             onchange="upInsumo(${ins.id}, 'unidade', this.value)"

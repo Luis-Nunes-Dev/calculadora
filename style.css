@@ -578,45 +578,41 @@ body {
 
 
 /* ---------------------------------------------------------------------
-   INSUMO — LAYOUT EM LINHA ÚNICA (insumo__row)
-   Substitui o grid 2×2 anterior por uma linha horizontal com 6 células:
-   [Nome (2fr)] [Valor (1fr)] [Unidade (68px)] [Qtd comprada (1fr)]
-   [Qtd usada (1fr)] [Custo calculado (1fr)]
-   Em telas menores, colapsa para 2 ou 3 colunas.
+   INSUMO — NOME (linha própria, full-width acima do grid)
+   Garante que o campo de nome tenha espaço de sobra para digitação
+   sem comprimir as colunas numéricas do grid abaixo.
+--------------------------------------------------------------------- */
+.insumo__field--nome {
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+/* ---------------------------------------------------------------------
+   INSUMO — GRID DE 5 COLUNAS (insumo__row)
+   Posicionado abaixo do campo Nome.
+   Colunas: [Valor (1fr)] [Unidade (54px)] [Comprada (1fr)] [Usada (1fr)] [Custo (1fr)]
+   Em telas menores colapsa para 2 colunas (2+2+1 quebrado).
 --------------------------------------------------------------------- */
 .insumo__row {
   display: grid;
-  grid-template-columns: 2fr 1fr 68px 1fr 1fr 1fr;
+  grid-template-columns: 1fr 54px 1fr 1fr 1fr;
   gap: 8px;
   align-items: end;
 }
-.insumo__row .field     { margin-top: 0; }
-.insumo__field--nome    { min-width: 0; } /* evita overflow do texto */
+.insumo__row .field { margin-top: 0; }
 
-/* Select de unidade estilizado como .inp */
+/* Select de unidade — mesma aparência dos inputs .inp */
 .inp--select {
-  padding-right: 6px;
+  padding-left: 8px;
+  padding-right: 4px;
   cursor: pointer;
 }
 
-/* Responsivo: tablet — 3 colunas (nome+valor+unidade / qtd comprada+usada+custo) */
-@media (max-width: 1100px) {
-  .insumo__row {
-    grid-template-columns: 2fr 1fr 68px;
-  }
-  .insumo__row .field:nth-child(4),
-  .insumo__row .field:nth-child(5),
-  .insumo__row .insumo__result-cell {
-    /* herda o grid pai — reposiciona para segunda linha */
-  }
-  .insumo__row {
-    grid-template-columns: 2fr 1fr 68px 1fr 1fr 1fr;
-  }
-}
-
-/* Responsivo: mobile — 2 colunas */
+/* Responsivo: mobile — 2 colunas (Valor | Unidade / Comprada | Usada / Custo full) */
 @media (max-width: 640px) {
-  .insumo__row { grid-template-columns: 1fr 1fr; }
+  .insumo__row {
+    grid-template-columns: 1fr 54px;
+  }
 }
 
 
