@@ -274,7 +274,7 @@ body {
 .insumo {
   border: 1.5px solid var(--border-lt);
   border-radius: var(--rs);
-  padding: 14px 14px 12px;
+  padding: 12px 36px 12px 14px; /* padding-right extra para não sobrepor o botão ✕ */
   background: #FAFBFD;
   position: relative; /* necessário para posicionar o botão remover */
 }
@@ -538,24 +538,9 @@ body {
 .footer a:hover { color: var(--step1); }
 
 /* ---------------------------------------------------------------------
-   TEXTO DESCRITIVO DO CARD (card__desc)
-   Parágrafo curto de orientação exibido no topo do corpo dos cards
-   das Etapas 1 e 2, logo abaixo do cabeçalho. Segue o mesmo estilo
-   do .header__desc mas com espaçamento adequado para o contexto interno.
---------------------------------------------------------------------- */
-.card__desc {
-  font-size: .8rem;
-  color: var(--muted);
-  line-height: 1.55;
-  margin-bottom: 16px;
-}
-
-
-/* ---------------------------------------------------------------------
    MODO CONFEITARIA / PADARIA — TOGGLE
-   Container do checkbox que ativa o modo confeitaria. Usa borda pontilhada
-   e fundo levemente azulado para se diferenciar dos campos de input normais,
-   mas sem chamar atenção excessiva — aparece como uma opção contextual.
+   Checkbox que ativa o modo de receita. A borda muda para azul e o
+   fundo fica levemente azulado quando o modo está ligado.
 --------------------------------------------------------------------- */
 .mode-toggle {
   margin-top: 12px;
@@ -563,9 +548,11 @@ body {
   border: 1.5px dashed var(--border);
   border-radius: var(--rs);
   background: #FAFBFD;
+  transition: border-color .15s, background .15s;
 }
 .mode-toggle:has(input:checked) {
   border-color: var(--step1);
+  border-style: solid;
   background: #EFF6FF;
 }
 .mode-toggle__label {
@@ -587,16 +574,55 @@ body {
   color: var(--text);
   letter-spacing: -.01em;
 }
-.mode-toggle .hint {
-  margin-top: 5px;
-  padding-left: 23px; /* alinha com o texto após o checkbox */
+.mode-toggle .hint { margin-top: 5px; padding-left: 23px; }
+
+
+/* ---------------------------------------------------------------------
+   INSUMO — LAYOUT EM LINHA ÚNICA (insumo__row)
+   Substitui o grid 2×2 anterior por uma linha horizontal com 6 células:
+   [Nome (2fr)] [Valor (1fr)] [Unidade (68px)] [Qtd comprada (1fr)]
+   [Qtd usada (1fr)] [Custo calculado (1fr)]
+   Em telas menores, colapsa para 2 ou 3 colunas.
+--------------------------------------------------------------------- */
+.insumo__row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 68px 1fr 1fr 1fr;
+  gap: 8px;
+  align-items: end;
+}
+.insumo__row .field     { margin-top: 0; }
+.insumo__field--nome    { min-width: 0; } /* evita overflow do texto */
+
+/* Select de unidade estilizado como .inp */
+.inp--select {
+  padding-right: 6px;
+  cursor: pointer;
+}
+
+/* Responsivo: tablet — 3 colunas (nome+valor+unidade / qtd comprada+usada+custo) */
+@media (max-width: 1100px) {
+  .insumo__row {
+    grid-template-columns: 2fr 1fr 68px;
+  }
+  .insumo__row .field:nth-child(4),
+  .insumo__row .field:nth-child(5),
+  .insumo__row .insumo__result-cell {
+    /* herda o grid pai — reposiciona para segunda linha */
+  }
+  .insumo__row {
+    grid-template-columns: 2fr 1fr 68px 1fr 1fr 1fr;
+  }
+}
+
+/* Responsivo: mobile — 2 colunas */
+@media (max-width: 640px) {
+  .insumo__row { grid-template-columns: 1fr 1fr; }
 }
 
 
 /* ---------------------------------------------------------------------
-   MODO CONFEITARIA — BLOCO DE RENDIMENTO
-   Wrapper do campo "Rendimento da receita". Oculto por padrão (display:none
-   no HTML); exibido via JS ao ativar o toggle de confeitaria.
+   MODO CONFEITARIA — RENDIMENTO (confeitaria-bloco)
+   Oculto por padrão; exibido via JS quando o modo confeitaria é ativado.
 --------------------------------------------------------------------- */
 .confeitaria-bloco {
   display: none;
@@ -605,9 +631,9 @@ body {
 
 
 /* ---------------------------------------------------------------------
-   MODO CONFEITARIA — CUSTO POR UNIDADE
-   Faixa exibida abaixo da barra azul de total de insumos, mostrando o
-   custo dividido pelo rendimento. Oculta por padrão; exibida via JS.
+   MODO CONFEITARIA — CUSTO POR UNIDADE (confeitaria-unidade)
+   Faixa exibida abaixo da barra azul de total, mostrando o custo
+   dividido pelo rendimento. Oculta por padrão; exibida via JS.
 --------------------------------------------------------------------- */
 .confeitaria-unidade {
   display: none;

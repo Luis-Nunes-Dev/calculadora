@@ -32,9 +32,6 @@
       </div>
       <div class="card__body">
 
-        <!-- Texto orientando o preenchimento da etapa -->
-        <p class="card__desc">Informe o nome do produto, os insumos utilizados e a mão de obra para calcular o custo direto de produção.</p>
-
         <!-- Nome do produto (separado dos insumos) -->
         <div class="field">
           <label class="lbl" for="nome-produto">Nome do produto</label>
@@ -42,28 +39,20 @@
         </div>
 
         <!-- Toggle: Modo Confeitaria / Padaria
-             Quando ativo, o campo "Rendimento" aparece e o custo total dos insumos
-             (custo do lote) é dividido pelo número de unidades para obter o custo unitário. -->
+             Quando ativo os rótulos dos campos de insumo seguem a nomenclatura
+             de receita (ingrediente, qtde total, qtde na receita) e o campo de
+             rendimento aparece para calcular o custo unitário a partir do lote. -->
         <div class="mode-toggle">
           <label class="mode-toggle__label">
             <input type="checkbox" id="modo-confeitaria" onchange="onModoConfeitariaChange()" />
             <span class="mode-toggle__txt">Modo Confeitaria / Padaria</span>
           </label>
-          <p class="hint">Ative para calcular o custo por unidade a partir de uma receita que rende múltiplas unidades.</p>
+          <p class="hint">Ative para usar a nomenclatura de receita e calcular o custo por unidade produzida.</p>
         </div>
 
         <div class="divider"></div>
 
-        <!-- Mão de obra: custo direto por unidade produzida (movido da Etapa 2) -->
-        <p class="section-lbl">Mão de obra</p>
-        <div class="field">
-          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
-          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
-        </div>
-
-        <div class="divider"></div>
-
-        <p class="section-lbl">Insumos utilizados</p>
+        <p class="section-lbl" id="insumos-section-lbl">Insumos utilizados</p>
 
         <div id="insumos-list" class="insumos-list"></div>
         <p id="empty-insumo" class="empty">Nenhum insumo adicionado ainda.</p>
@@ -106,8 +95,14 @@
       </div>
       <div class="card__body">
 
-        <!-- Texto orientando o preenchimento da etapa -->
-        <p class="card__desc">Informe suas despesas mensais fixas. O percentual de rateio distribui esses custos proporcionalmente em cada produto.</p>
+        <!-- Mão de obra -->
+        <p class="section-lbl">Mão de obra</p>
+        <div class="field">
+          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
+          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
+        </div>
+
+        <div class="divider"></div>
 
         <!-- Custos fixos mensais — dinâmico -->
         <p class="section-lbl">Custos fixos mensais</p>
@@ -246,7 +241,7 @@
    Cada item tem um "id" único (gerado por um contador incremental)
    para podermos identificar, atualizar e remover linhas específicas.
 --------------------------------------------------------------------- */
-let insumos      = [];  /* [{ id, nome, vTotal, qtdAdq, qtdUsa, custo }] */
+let insumos      = [];  /* [{ id, nome, vTotal, unidade, qtdAdq, qtdUsa, custo }] */
 let custosFixos  = [];  /* [{ id, nome, valor }] */
 let nextInsumoId = 0;   /* contador para gerar IDs únicos de insumo */
 let nextCFId     = 0;   /* contador para gerar IDs únicos de custo fixo */
@@ -337,25 +332,25 @@ function onNomeProdutoChange(valor) {
 }
 
 /**
- * Ativado quando o usuário liga/desliga o Modo Confeitaria / Padaria.
- * Exibe ou oculta os campos de rendimento e custo por unidade, e atualiza
- * o rótulo do total de insumos conforme o modo ativo.
- * NÃO altera a lógica de cálculo — apenas controla a visibilidade dos campos
- * e passa o sinalizador para calcular().
+ * Ativado ao ligar/desligar o Modo Confeitaria / Padaria.
+ * Controla a visibilidade dos campos de rendimento e custo por unidade,
+ * atualiza os rótulos da seção e do total, e re-renderiza os insumos
+ * para que os labels dos campos reflitam o modo ativo.
  */
 function onModoConfeitariaChange() {
   const ativo   = document.getElementById('modo-confeitaria').checked;
   const bloco   = document.getElementById('confeitaria-bloco');
   const unidade = document.getElementById('confeitaria-unidade');
   const lbl     = document.getElementById('total-insumos-lbl');
+  const secLbl  = document.getElementById('insumos-section-lbl');
 
-  /* Mostra/oculta o campo de rendimento e o display de custo por unidade */
   bloco.style.display   = ativo ? 'block' : 'none';
   unidade.style.display = ativo ? 'block' : 'none';
+  lbl.textContent       = ativo ? 'Custo total do lote'      : 'Custo total dos insumos';
+  secLbl.textContent    = ativo ? 'Ingredientes da receita'  : 'Insumos utilizados';
 
-  /* Altera o rótulo da faixa azul para refletir o modo ativo */
-  lbl.textContent = ativo ? 'Custo total do lote' : 'Custo total dos insumos';
-
+  /* Re-renderiza os insumos para aplicar os rótulos do modo ativo */
+  renderInsumos();
   calcular();
 }
 
@@ -371,7 +366,7 @@ function onModoConfeitariaChange() {
  * Chamado pelo botão "+ Adicionar insumo".
  */
 function addInsumo() {
-  insumos.push({ id: nextInsumoId++, nome: '', vTotal: 0, qtdAdq: 0, qtdUsa: 0, custo: 0 });
+  insumos.push({ id: nextInsumoId++, nome: '', vTotal: 0, unidade: 'un', qtdAdq: 0, qtdUsa: 0, custo: 0 });
   renderInsumos();
   calcular();
 }
@@ -405,8 +400,8 @@ function upInsumo(id, campo, valor) {
   const ins = insumos.find(i => i.id === id);
   if (!ins) return;
 
-  /* "nome" é texto puro, os demais campos são numéricos */
-  ins[campo] = (campo === 'nome') ? valor : parseNum(valor);
+  /* "nome" e "unidade" são texto puro, os demais campos são numéricos */
+  ins[campo] = (campo === 'nome' || campo === 'unidade') ? valor : parseNum(valor);
 
   /* Recalcula o custo deste insumo específico */
   ins.custo = ins.qtdAdq > 0
@@ -423,12 +418,25 @@ function upInsumo(id, campo, valor) {
 
 /**
  * Re-renderiza a lista completa de insumos no DOM.
- * Só é chamada quando um insumo é adicionado ou removido — edições de
- * campo usam upInsumo() para evitar perda de foco durante a digitação.
+ * Só é chamada quando um insumo é adicionado, removido ou quando o modo
+ * confeitaria é ativado/desativado (pois os rótulos mudam).
+ * Edições de campo numéricas/texto usam upInsumo() para evitar perda de foco.
  */
 function renderInsumos() {
   const list  = document.getElementById('insumos-list');
   const empty = document.getElementById('empty-insumo');
+  const modo  = document.getElementById('modo-confeitaria').checked;
+
+  /* Rótulos e placeholders adaptativos conforme o modo ativo */
+  const lblNome = modo ? 'Ingrediente'         : 'Nome do insumo';
+  const lblVlr  = modo ? 'Valor pago (R$)'     : 'Valor total pago (R$)';
+  const lblAdq  = modo ? 'Qtde total'          : 'Qtd. comprada';
+  const lblUsa  = modo ? 'Qtde na receita'     : 'Qtd. usada';
+  const phAdq   = modo ? 'Ex: 500'             : 'Ex: 5';
+  const phUsa   = modo ? 'Ex: 100'             : 'Ex: 0,5';
+
+  /* Opções de unidade de medida disponíveis no select */
+  const UNIDADES = ['un','g','kg','ml','L','m','cx','dz'];
 
   /* Mostra a mensagem de "lista vazia" só quando não há insumos */
   empty.style.display = insumos.length === 0 ? 'block' : 'none';
@@ -438,19 +446,21 @@ function renderInsumos() {
 
       <button class="btn-rm" onclick="rmInsumo(${ins.id})" title="Remover insumo" aria-label="Remover insumo">✕</button>
 
-      <div class="field">
-        <label class="lbl">Nome do insumo</label>
-        <input
-          class="inp" type="text" placeholder="Ex: Farinha, Embalagem…"
-          value="${ins.nome.replace(/"/g, '&quot;')}"
-          oninput="upInsumo(${ins.id}, 'nome', this.value)"
-        />
-      </div>
+      <!-- Linha horizontal com todos os campos: nome | valor | unidade | qtd comprada | qtd usada | custo -->
+      <div class="insumo__row">
 
-      <div class="insumo__grid">
+        <div class="field insumo__field--nome">
+          <label class="lbl">${lblNome}</label>
+          <input
+            class="inp" type="text"
+            placeholder="Ex: Farinha, Leite…"
+            value="${ins.nome.replace(/"/g, '&quot;')}"
+            oninput="upInsumo(${ins.id}, 'nome', this.value)"
+          />
+        </div>
 
         <div class="field">
-          <label class="lbl">Valor total pago (R$)</label>
+          <label class="lbl">${lblVlr}</label>
           <input
             class="inp" type="number" inputmode="decimal"
             placeholder="Ex: 10,00" min="0" step="0.01"
@@ -460,27 +470,35 @@ function renderInsumos() {
         </div>
 
         <div class="field">
-          <label class="lbl">Qtd. comprada</label>
+          <label class="lbl">Unidade</label>
+          <select
+            class="inp inp--select"
+            onchange="upInsumo(${ins.id}, 'unidade', this.value)"
+          >${UNIDADES.map(u => `<option value="${u}" ${ins.unidade === u ? 'selected' : ''}>${u}</option>`).join('')}</select>
+        </div>
+
+        <div class="field">
+          <label class="lbl">${lblAdq}</label>
           <input
             class="inp" type="number" inputmode="decimal"
-            placeholder="Ex: 5 (kg/un/L…)" min="0" step="any"
+            placeholder="${phAdq}" min="0" step="any"
             value="${ins.qtdAdq || ''}"
             oninput="upInsumo(${ins.id}, 'qtdAdq', this.value)"
           />
         </div>
 
         <div class="field">
-          <label class="lbl">Qtd. usada na produção</label>
+          <label class="lbl">${lblUsa}</label>
           <input
             class="inp" type="number" inputmode="decimal"
-            placeholder="Ex: 0,5" min="0" step="any"
+            placeholder="${phUsa}" min="0" step="any"
             value="${ins.qtdUsa || ''}"
             oninput="upInsumo(${ins.id}, 'qtdUsa', this.value)"
           />
         </div>
 
         <div class="insumo__result-cell">
-          <span class="lbl">Custo calculado</span>
+          <span class="lbl">Custo</span>
           <div class="insumo__result-val" id="ir-${ins.id}">${brl(ins.custo)}</div>
         </div>
 
@@ -592,8 +610,8 @@ function calcular() {
 
   /* --- Modo Confeitaria / Padaria ---
      Quando ativo, o custo total dos insumos representa o lote inteiro.
-     O rendimento divide esse custo pelo número de unidades produzidas,
-     gerando o custo de insumos por unidade. Em modo padrão, rendimento = 1. */
+     O campo "rendimento" divide esse custo pelo número de unidades produzidas,
+     obtendo o custo de insumos por unidade. Em modo padrão, rendimento = 1. */
   const modoConfeitaria = document.getElementById('modo-confeitaria').checked;
   const rendimento      = modoConfeitaria
     ? Math.max(1, parseNum(document.getElementById('rendimento').value) || 1)
@@ -607,8 +625,8 @@ function calcular() {
   const totalCFMens = custosFixos.reduce((s, c) => s + c.valor, 0);
 
   /* --- Base de custo do produto e rateio sobre despesas fixas ---
-     baseCusto usa insumosUnitario para funcionar tanto no modo padrão
-     quanto no modo confeitaria sem alterar nenhuma outra fórmula. --- */
+     baseCusto usa insumosUnitario, funcionando em ambos os modos
+     sem alterar nenhuma outra fórmula da cadeia de preços. --- */
   const baseCusto   = insumosUnitario + maoObra;
   const rateioValor = totalCFMens * (rateioPct / 100);
 
