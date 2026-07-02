@@ -538,242 +538,108 @@ body {
 .footer a:hover { color: var(--step1); }
 
 /* ---------------------------------------------------------------------
-   BOTÃO SALVAR PRODUTO
-   Botão primário no rodapé da Etapa 3. Salva os dados da calculadora
-   no localStorage (criando novo ou atualizando produto existente).
+   TEXTO DESCRITIVO DO CARD (card__desc)
+   Parágrafo curto de orientação exibido no topo do corpo dos cards
+   das Etapas 1 e 2, logo abaixo do cabeçalho. Segue o mesmo estilo
+   do .header__desc mas com espaçamento adequado para o contexto interno.
 --------------------------------------------------------------------- */
-.btn-salvar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  width: 100%;
-  padding: 11px 16px;
-  background: var(--step3);
-  color: #fff;
-  border: none;
-  border-radius: var(--rs);
-  font-family: var(--sans);
-  font-size: .875rem;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: .01em;
-  transition: background .15s, transform .1s;
+.card__desc {
+  font-size: .8rem;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 16px;
 }
-.btn-salvar:hover  { background: #1E293B; }
-.btn-salvar:active { transform: scale(.98); }
 
 
 /* ---------------------------------------------------------------------
-   BADGE DE EDIÇÃO
-   Aparece no rodapé da Etapa 3 quando o usuário clicou em "Editar"
-   em um produto salvo, indicando qual produto está sendo modificado.
-   Oculto por padrão (display: none); ativado via JS com display: flex.
+   MODO CONFEITARIA / PADARIA — TOGGLE
+   Container do checkbox que ativa o modo confeitaria. Usa borda pontilhada
+   e fundo levemente azulado para se diferenciar dos campos de input normais,
+   mas sem chamar atenção excessiva — aparece como uma opção contextual.
 --------------------------------------------------------------------- */
-.editando-badge {
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 9px 12px;
-  background: #FFF7ED;
-  border: 1.5px solid #FED7AA;
+.mode-toggle {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1.5px dashed var(--border);
   border-radius: var(--rs);
-  margin-bottom: 12px;
+  background: #FAFBFD;
 }
-.editando-badge__txt {
-  font-size: .78rem;
-  color: #92400E;
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.mode-toggle:has(input:checked) {
+  border-color: var(--step1);
+  background: #EFF6FF;
 }
-.editando-badge__cancel {
-  font-family: var(--sans);
-  font-size: .72rem;
-  font-weight: 600;
-  color: #92400E;
-  background: none;
-  border: 1px solid #FDBA74;
-  border-radius: 4px;
-  padding: 3px 9px;
+.mode-toggle__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+.mode-toggle__label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--step1);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background .15s;
 }
-.editando-badge__cancel:hover { background: #FED7AA; }
-
-
-/* ---------------------------------------------------------------------
-   SEÇÃO PRODUTOS SALVOS
-   Fica abaixo do grid da calculadora. Cabeçalho com título e campo de
-   busca, seguido do grid de cards dos produtos salvos.
---------------------------------------------------------------------- */
-.salvos {
-  max-width: 1320px;
-  margin: 0 auto 48px;
-  padding: 0 20px;
-}
-
-/* Cabeçalho da seção: título à esquerda, busca à direita */
-.salvos__head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-.salvos__head-text { flex: 1; }
-.salvos__eyebrow {
-  font-size: .68rem;
-  font-weight: 700;
-  letter-spacing: .13em;
-  text-transform: uppercase;
-  color: var(--step2);
-  margin-bottom: 4px;
-}
-.salvos__title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  letter-spacing: -.02em;
-  color: var(--text);
-}
-.salvos__search-wrap { width: 280px; }
-
-/* Grid 4 colunas desktop / 2 tablet / 1 mobile */
-.salvos__grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-/* Mensagem de lista vazia ou busca sem resultado */
-.salvos__empty {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--faint);
-  font-size: .85rem;
-  line-height: 1.6;
-}
-
-
-/* ---------------------------------------------------------------------
-   CARD DE PRODUTO SALVO
-   Card compacto com resultados do produto, data de edição
-   e ações (editar / excluir) na parte inferior.
---------------------------------------------------------------------- */
-.sp-card {
-  background: var(--surface);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: box-shadow .2s, transform .2s;
-}
-.sp-card:hover {
-  box-shadow: 0 4px 6px rgba(15,23,42,.07), 0 12px 32px rgba(15,23,42,.1);
-  transform: translateY(-2px);
-}
-
-/* Corpo do card */
-.sp-card__body {
-  padding: 16px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-/* Nome do produto em destaque no topo */
-.sp-card__nome {
-  font-size: .95rem;
+.mode-toggle__txt {
+  font-size: .82rem;
   font-weight: 700;
   color: var(--text);
   letter-spacing: -.01em;
-  line-height: 1.3;
 }
-
-/* Bloco de resultados: custo, mínimo, ideal */
-.sp-card__resultados {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+.mode-toggle .hint {
+  margin-top: 5px;
+  padding-left: 23px; /* alinha com o texto após o checkbox */
 }
-.sp-card__linha {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.sp-card__lbl {
-  font-size: .67rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--faint);
-}
-.sp-card__val {
-  font-family: var(--mono);
-  font-size: .85rem;
-  font-weight: 500;
-}
-/* Cores alinhadas com os resultados da calculadora */
-.sp-card__val--custo  { color: var(--c-custo); }
-.sp-card__val--minimo { color: var(--c-minimo); }
-.sp-card__val--ideal  { color: var(--c-ideal); }
-
-/* Data da última edição — rodapé do corpo do card */
-.sp-card__data {
-  font-size: .68rem;
-  color: var(--faint);
-  font-family: var(--mono);
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-lt);
-}
-
-/* Ações: Editar e Excluir lado a lado na parte inferior */
-.sp-card__actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: 1px solid var(--border-lt);
-}
-.sp-card__btn {
-  padding: 10px;
-  border: none;
-  background: none;
-  font-family: var(--sans);
-  font-size: .78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background .15s;
-}
-.sp-card__btn--edit { color: var(--step1); }
-.sp-card__btn--edit:hover { background: #EFF6FF; }
-.sp-card__btn--del  { color: var(--c-danger); border-left: 1px solid var(--border-lt); }
-.sp-card__btn--del:hover  { background: #FEF2F2; }
 
 
 /* ---------------------------------------------------------------------
-   RESPONSIVO — adições para Produtos Salvos
+   MODO CONFEITARIA — BLOCO DE RENDIMENTO
+   Wrapper do campo "Rendimento da receita". Oculto por padrão (display:none
+   no HTML); exibido via JS ao ativar o toggle de confeitaria.
 --------------------------------------------------------------------- */
-
-/* Tablet: grid de 2 colunas nos produtos salvos */
-@media (max-width: 960px) {
-  .salvos__grid { grid-template-columns: repeat(2, 1fr); }
+.confeitaria-bloco {
+  display: none;
+  margin-bottom: 10px;
 }
 
-/* Mobile grande: busca abaixo do título */
-@media (max-width: 640px) {
-  .salvos__head        { align-items: flex-start; flex-direction: column; }
-  .salvos__search-wrap { width: 100%; }
-}
 
-/* Mobile pequeno: 1 coluna nos produtos salvos */
-@media (max-width: 480px) {
-  .salvos__grid { grid-template-columns: 1fr; }
+/* ---------------------------------------------------------------------
+   MODO CONFEITARIA — CUSTO POR UNIDADE
+   Faixa exibida abaixo da barra azul de total de insumos, mostrando o
+   custo dividido pelo rendimento. Oculta por padrão; exibida via JS.
+--------------------------------------------------------------------- */
+.confeitaria-unidade {
+  display: none;
+  margin-top: 8px;
+  padding: 10px 14px;
+  background: #EFF6FF;
+  border: 1.5px solid #BFDBFE;
+  border-radius: var(--rs);
+}
+.confeitaria-unidade__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.confeitaria-unidade__lbl {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--step1);
+  opacity: .85;
+}
+.confeitaria-unidade__val {
+  font-family: var(--mono);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--step1);
+}
+.confeitaria-unidade__formula {
+  margin-top: 3px;
+  font-size: .7rem;
+  color: var(--step1);
+  opacity: .65;
+  font-family: var(--mono);
 }

@@ -32,10 +32,33 @@
       </div>
       <div class="card__body">
 
+        <!-- Texto orientando o preenchimento da etapa -->
+        <p class="card__desc">Informe o nome do produto, os insumos utilizados e a mão de obra para calcular o custo direto de produção.</p>
+
         <!-- Nome do produto (separado dos insumos) -->
         <div class="field">
           <label class="lbl" for="nome-produto">Nome do produto</label>
           <input class="inp" type="text" id="nome-produto" placeholder="Ex: Bolo de chocolate" oninput="onNomeProdutoChange(this.value)" />
+        </div>
+
+        <!-- Toggle: Modo Confeitaria / Padaria
+             Quando ativo, o campo "Rendimento" aparece e o custo total dos insumos
+             (custo do lote) é dividido pelo número de unidades para obter o custo unitário. -->
+        <div class="mode-toggle">
+          <label class="mode-toggle__label">
+            <input type="checkbox" id="modo-confeitaria" onchange="onModoConfeitariaChange()" />
+            <span class="mode-toggle__txt">Modo Confeitaria / Padaria</span>
+          </label>
+          <p class="hint">Ative para calcular o custo por unidade a partir de uma receita que rende múltiplas unidades.</p>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Mão de obra: custo direto por unidade produzida (movido da Etapa 2) -->
+        <p class="section-lbl">Mão de obra</p>
+        <div class="field">
+          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
+          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
         </div>
 
         <div class="divider"></div>
@@ -47,9 +70,27 @@
 
         <button class="btn-add btn-add--blue" onclick="addInsumo()">+ Adicionar insumo</button>
 
+        <!-- Rendimento da receita — oculto por padrão, exibido no Modo Confeitaria -->
+        <div class="confeitaria-bloco" id="confeitaria-bloco">
+          <div class="field">
+            <label class="lbl" for="rendimento">Rendimento da receita (unidades)</label>
+            <input class="inp" type="number" id="rendimento" placeholder="Ex: 50" min="1" step="1" value="1" />
+            <p class="hint">Quantas unidades essa receita produz ao todo.</p>
+          </div>
+        </div>
+
         <div class="total-insumos">
-          <span class="total-insumos__lbl">Custo total dos insumos</span>
+          <span class="total-insumos__lbl" id="total-insumos-lbl">Custo total dos insumos</span>
           <span class="total-insumos__val" id="total-insumos">R$ 0,00</span>
+        </div>
+
+        <!-- Custo por unidade — oculto por padrão, exibido no Modo Confeitaria -->
+        <div class="confeitaria-unidade" id="confeitaria-unidade">
+          <div class="confeitaria-unidade__row">
+            <span class="confeitaria-unidade__lbl">Custo por unidade</span>
+            <span class="confeitaria-unidade__val" id="custo-por-unidade">R$ 0,00</span>
+          </div>
+          <div class="confeitaria-unidade__formula" id="custo-por-unidade-formula">R$ 0,00 ÷ 1 un.</div>
         </div>
 
       </div>
@@ -65,14 +106,8 @@
       </div>
       <div class="card__body">
 
-        <!-- Mão de obra -->
-        <p class="section-lbl">Mão de obra</p>
-        <div class="field">
-          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
-          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
-        </div>
-
-        <div class="divider"></div>
+        <!-- Texto orientando o preenchimento da etapa -->
+        <p class="card__desc">Informe suas despesas mensais fixas. O percentual de rateio distribui esses custos proporcionalmente em cada produto.</p>
 
         <!-- Custos fixos mensais — dinâmico -->
         <p class="section-lbl">Custos fixos mensais</p>
@@ -187,61 +222,11 @@
             </div>
           </div>
 
-
-        <div class="divider"></div>
-
-        <!-- Badge de edição: aparece quando um produto salvo está sendo editado.
-             Exibido via JS (editarProduto), oculto por padrão. -->
-        <div class="editando-badge" id="editando-badge">
-          <span class="editando-badge__txt">
-            Editando: <strong id="editando-nome">—</strong>
-          </span>
-          <button class="editando-badge__cancel" onclick="cancelarEdicao()">Cancelar</button>
         </div>
-
-        <!-- Botão que salva (ou atualiza) o produto no localStorage -->
-        <button class="btn-salvar" onclick="salvarProduto()">
-          💾 Salvar Produto
-        </button>
-
       </div>
     </section>
 
   </main>
-
-  <!-- ============================================================
-       PRODUTOS SALVOS
-       Seção abaixo da calculadora com busca em tempo real, grid de
-       cards e ações de editar/excluir. Dados persistidos em localStorage.
-  ============================================================ -->
-  <section class="salvos">
-
-    <div class="salvos__head">
-      <div class="salvos__head-text">
-        <p class="salvos__eyebrow">Histórico</p>
-        <h2 class="salvos__title">Produtos Salvos</h2>
-      </div>
-      <!-- Campo de pesquisa em tempo real por nome do produto -->
-      <div class="salvos__search-wrap">
-        <input
-          class="inp"
-          type="text"
-          id="pesquisa-produto"
-          placeholder="Pesquisar por nome…"
-          oninput="pesquisarProdutos()"
-        />
-      </div>
-    </div>
-
-    <!-- Grid de cards preenchido via JS (renderizarProdutos) -->
-    <div id="salvos-list" class="salvos__grid"></div>
-
-    <!-- Exibido quando não há produtos salvos ou a busca não retorna resultados -->
-    <p id="salvos-empty" class="salvos__empty">
-      Nenhum produto salvo ainda. Preencha a calculadora e clique em <strong>Salvar Produto</strong>.
-    </p>
-
-  </section>
 
   <footer class="footer">
     <p>Desenvolvido por <a href="https://github.com/luisnunes" target="_blank" rel="noopener noreferrer">Luis Nunes</a></p>
@@ -349,6 +334,29 @@ function onNomeProdutoChange(valor) {
   } else {
     el.style.display = 'none';
   }
+}
+
+/**
+ * Ativado quando o usuário liga/desliga o Modo Confeitaria / Padaria.
+ * Exibe ou oculta os campos de rendimento e custo por unidade, e atualiza
+ * o rótulo do total de insumos conforme o modo ativo.
+ * NÃO altera a lógica de cálculo — apenas controla a visibilidade dos campos
+ * e passa o sinalizador para calcular().
+ */
+function onModoConfeitariaChange() {
+  const ativo   = document.getElementById('modo-confeitaria').checked;
+  const bloco   = document.getElementById('confeitaria-bloco');
+  const unidade = document.getElementById('confeitaria-unidade');
+  const lbl     = document.getElementById('total-insumos-lbl');
+
+  /* Mostra/oculta o campo de rendimento e o display de custo por unidade */
+  bloco.style.display   = ativo ? 'block' : 'none';
+  unidade.style.display = ativo ? 'block' : 'none';
+
+  /* Altera o rótulo da faixa azul para refletir o modo ativo */
+  lbl.textContent = ativo ? 'Custo total do lote' : 'Custo total dos insumos';
+
+  calcular();
 }
 
 
@@ -582,15 +590,26 @@ function calcular() {
   const margem1   = parseNum(document.getElementById('margem1').value);
   const margem2   = parseNum(document.getElementById('margem2').value);
 
-  /* --- Etapa 1: soma de todos os insumos --- */
-  const totalInsumos = insumos.reduce((s, i) => s + i.custo, 0);
+  /* --- Modo Confeitaria / Padaria ---
+     Quando ativo, o custo total dos insumos representa o lote inteiro.
+     O rendimento divide esse custo pelo número de unidades produzidas,
+     gerando o custo de insumos por unidade. Em modo padrão, rendimento = 1. */
+  const modoConfeitaria = document.getElementById('modo-confeitaria').checked;
+  const rendimento      = modoConfeitaria
+    ? Math.max(1, parseNum(document.getElementById('rendimento').value) || 1)
+    : 1;
 
-  /* --- Etapa 2: total mensal das despesas fixas ---
-     esse valor agora é a base do rateio percentual --- */
+  /* --- Etapa 1: soma de todos os insumos (custo total do lote ou por unidade) --- */
+  const totalInsumos    = insumos.reduce((s, i) => s + i.custo, 0);
+  const insumosUnitario = totalInsumos / rendimento; /* = totalInsumos quando rendimento = 1 */
+
+  /* --- Etapa 2: total mensal das despesas fixas (base do rateio percentual) --- */
   const totalCFMens = custosFixos.reduce((s, c) => s + c.valor, 0);
 
-  /* --- Base de custo do produto e rateio sobre despesas fixas --- */
-  const baseCusto   = totalInsumos + maoObra;
+  /* --- Base de custo do produto e rateio sobre despesas fixas ---
+     baseCusto usa insumosUnitario para funcionar tanto no modo padrão
+     quanto no modo confeitaria sem alterar nenhuma outra fórmula. --- */
+  const baseCusto   = insumosUnitario + maoObra;
   const rateioValor = totalCFMens * (rateioPct / 100);
 
   /* --- Preços finais --- */
@@ -607,10 +626,19 @@ function calcular() {
   const lucro2       = precoIdeal2 - precoCusto;
   const lucroRel2     = precoIdeal2 > 0 ? (lucro2 / precoIdeal2) * 100 : 0;
 
-  /* --- Atualiza os displays da Etapa 1 e Etapa 2 --- */
+  /* --- Atualiza os displays da Etapa 1 --- */
   set('total-insumos', brl(totalInsumos));
-  set('cf-mensal',      brl(totalCFMens));
-  set('rateio-valor',   brl(rateioValor));
+
+  /* No Modo Confeitaria, exibe também o custo dividido por unidade */
+  if (modoConfeitaria) {
+    set('custo-por-unidade', brl(insumosUnitario));
+    document.getElementById('custo-por-unidade-formula').textContent =
+      `${brl(totalInsumos)} ÷ ${rendimento} un.`;
+  }
+
+  /* --- Atualiza os displays da Etapa 2 --- */
+  set('cf-mensal',    brl(totalCFMens));
+  set('rateio-valor', brl(rateioValor));
   document.getElementById('rateio-formula').textContent =
     `${rateioPct}% sobre ${brl(totalCFMens)}`;
 
@@ -638,7 +666,7 @@ function calcular() {
    rateio, impostos e as duas margens) recalculam tudo a cada
    alteração, em tempo real.
 ========================================================= */
-['mao-obra', 'rateio-pct', 'impostos', 'margem1', 'margem2'].forEach(id =>
+['mao-obra', 'rateio-pct', 'impostos', 'margem1', 'margem2', 'rendimento'].forEach(id =>
   document.getElementById(id).addEventListener('input', calcular)
 );
 
@@ -651,267 +679,6 @@ function calcular() {
 addInsumo();      /* um insumo pré-carregado */
 addCustoFixo();   /* um custo fixo pré-carregado */
 calcular();        /* calcula os valores iniciais (tudo zerado) */
-
-/* =========================================================
-   PRODUTOS SALVOS — ESTADO DE EDIÇÃO
-   Armazena o ID do produto que está sendo editado no momento.
-   null = novo produto | string = ID de produto existente.
-========================================================= */
-let produtoEditandoId = null;
-
-
-/* =========================================================
-   PRODUTOS SALVOS — PERSISTÊNCIA (localStorage)
-========================================================= */
-
-/**
- * Retorna o array de produtos salvos do localStorage.
- * Se não houver dados ou se estiverem corrompidos, retorna [].
- * @returns {Array} array de objetos de produto
- */
-function obterProdutos() {
-  try {
-    return JSON.parse(localStorage.getItem('produtos')) || [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Persiste o array de produtos no localStorage.
- * @param {Array} arr - array de produtos a salvar
- */
-function salvarProdutos(arr) {
-  localStorage.setItem('produtos', JSON.stringify(arr));
-}
-
-
-/* =========================================================
-   PRODUTOS SALVOS — RENDERIZAÇÃO
-========================================================= */
-
-/**
- * Renderiza a grade de cards de produtos salvos no DOM.
- * Aplica filtro por nome se fornecido; sem filtro exibe todos.
- * @param {string} [filtro=''] - texto de busca (vazio = todos)
- */
-function renderizarProdutos(filtro) {
-  const lista  = document.getElementById('salvos-list');
-  const empty  = document.getElementById('salvos-empty');
-  const termo  = (filtro || '').toLowerCase().trim();
-  let produtos = obterProdutos();
-
-  /* Filtra pelo nome quando há termo de pesquisa */
-  if (termo) {
-    produtos = produtos.filter(p =>
-      (p.nomeProduto || '').toLowerCase().includes(termo)
-    );
-  }
-
-  if (produtos.length === 0) {
-    lista.innerHTML = '';
-    empty.style.display = 'block';
-    return;
-  }
-
-  empty.style.display = 'none';
-
-  lista.innerHTML = produtos.map(p => {
-    /* Formata a data de edição para o padrão brasileiro */
-    const data = new Date(p.dataEdicao).toLocaleString('pt-BR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit'
-    });
-
-    return `
-      <div class="sp-card" id="sp-${p.id}">
-        <div class="sp-card__body">
-          <h3 class="sp-card__nome">${p.nomeProduto || '(sem nome)'}</h3>
-          <div class="sp-card__resultados">
-            <div class="sp-card__linha">
-              <span class="sp-card__lbl">Preço de custo</span>
-              <span class="sp-card__val sp-card__val--custo">${brl(p.precoCusto)}</span>
-            </div>
-            <div class="sp-card__linha">
-              <span class="sp-card__lbl">Preço mínimo</span>
-              <span class="sp-card__val sp-card__val--minimo">${brl(p.precoMinimo)}</span>
-            </div>
-            <div class="sp-card__linha">
-              <span class="sp-card__lbl">Preço ideal (${p.margem1}%)</span>
-              <span class="sp-card__val sp-card__val--ideal">${brl(p.precoIdeal1)}</span>
-            </div>
-          </div>
-          <p class="sp-card__data">Editado em ${data}</p>
-        </div>
-        <div class="sp-card__actions">
-          <button class="sp-card__btn sp-card__btn--edit" onclick="editarProduto('${p.id}')">✏️ Editar</button>
-          <button class="sp-card__btn sp-card__btn--del"  onclick="excluirProduto('${p.id}')">🗑️ Excluir</button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
-
-
-/* =========================================================
-   PRODUTOS SALVOS — OPERAÇÕES
-========================================================= */
-
-/**
- * Coleta todo o estado atual da calculadora e salva no localStorage.
- *
- * - Se produtoEditandoId != null → atualiza o produto existente.
- * - Caso contrário → cria novo com ID único baseado em timestamp.
- *
- * Após salvar: re-renderiza a lista, limpa o badge de edição e
- * faz scroll suave até a seção de Produtos Salvos.
- */
-function salvarProduto() {
-  const nomeProduto = document.getElementById('nome-produto').value.trim();
-
-  if (!nomeProduto) {
-    alert('Preencha o nome do produto (Etapa 1) antes de salvar.');
-    document.getElementById('nome-produto').focus();
-    return;
-  }
-
-  /* Lê os campos simples da calculadora */
-  const maoObra   = parseNum(document.getElementById('mao-obra').value);
-  const rateioPct = parseNum(document.getElementById('rateio-pct').value);
-  const imposto   = parseNum(document.getElementById('impostos').value);
-  const margem1   = parseNum(document.getElementById('margem1').value);
-  const margem2   = parseNum(document.getElementById('margem2').value);
-
-  /* Recalcula os preços para garantir que os valores salvos estão corretos */
-  const totalInsumos = insumos.reduce((s, i) => s + i.custo, 0);
-  const totalCFMens  = custosFixos.reduce((s, c) => s + c.valor, 0);
-  const baseCusto    = totalInsumos + maoObra;
-  const rateioValor  = totalCFMens * (rateioPct / 100);
-  const precoCusto   = baseCusto + rateioValor;
-  const precoMinimo  = precoCusto  * (1 + imposto / 100);
-  const precoIdeal1  = precoMinimo * (1 + margem1  / 100);
-  const precoIdeal2  = precoMinimo * (1 + margem2  / 100);
-
-  /* Monta o objeto com todo o estado necessário para restauração */
-  const produto = {
-    id:           produtoEditandoId || ('prod_' + Date.now()),
-    nomeProduto,
-    /* Cópia profunda dos arrays para restaurar ao editar */
-    insumos:      JSON.parse(JSON.stringify(insumos)),
-    custosFixos:  JSON.parse(JSON.stringify(custosFixos)),
-    /* Campos simples */
-    maoObra, rateioPct, imposto, margem1, margem2,
-    /* Resultados pré-calculados para exibição nos cards */
-    precoCusto, precoMinimo, precoIdeal1, precoIdeal2,
-    dataEdicao: new Date().toISOString()
-  };
-
-  /* Atualiza produto existente ou insere novo no array */
-  const lista = obterProdutos();
-  const idx   = lista.findIndex(p => p.id === produto.id);
-  if (idx >= 0) {
-    lista[idx] = produto; /* sobrescreve o produto existente */
-  } else {
-    lista.push(produto);  /* adiciona novo produto */
-  }
-
-  salvarProdutos(lista);
-  cancelarEdicao(); /* oculta o badge sem apagar os campos da calculadora */
-  renderizarProdutos(document.getElementById('pesquisa-produto').value);
-
-  /* Scroll suave até a seção de produtos salvos para feedback visual */
-  document.getElementById('salvos-list').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-/**
- * Carrega um produto salvo de volta para a calculadora.
- *
- * Restaura: nome, insumos, despesas fixas e todos os campos simples.
- * Re-renderiza as listas dinâmicas, recalcula e faz scroll ao topo.
- *
- * @param {string} id - ID do produto a editar
- */
-function editarProduto(id) {
-  const produto = obterProdutos().find(p => p.id === id);
-  if (!produto) return;
-
-  /* Marca o produto como "em edição" */
-  produtoEditandoId = produto.id;
-
-  /* Preenche o nome do produto */
-  document.getElementById('nome-produto').value = produto.nomeProduto;
-  onNomeProdutoChange(produto.nomeProduto);
-
-  /* Restaura os arrays de estado (cópia profunda) */
-  insumos     = JSON.parse(JSON.stringify(produto.insumos));
-  custosFixos = JSON.parse(JSON.stringify(produto.custosFixos));
-
-  /* Ajusta os contadores de ID para não colidir com os IDs restaurados */
-  nextInsumoId = insumos.length     > 0 ? Math.max(...insumos.map(i => i.id))     + 1 : 0;
-  nextCFId     = custosFixos.length > 0 ? Math.max(...custosFixos.map(c => c.id)) + 1 : 0;
-
-  /* Re-renderiza as listas dinâmicas com os dados restaurados */
-  renderInsumos();
-  renderCustosFixos();
-
-  /* Preenche os campos simples */
-  document.getElementById('mao-obra').value   = produto.maoObra   || '';
-  document.getElementById('rateio-pct').value = produto.rateioPct ?? 5;
-  document.getElementById('impostos').value   = produto.imposto   || '';
-  document.getElementById('margem1').value    = produto.margem1   ?? 30;
-  document.getElementById('margem2').value    = produto.margem2   ?? 50;
-
-  /* Recalcula com os dados restaurados */
-  calcular();
-
-  /* Exibe o badge com o nome do produto sendo editado */
-  document.getElementById('editando-nome').textContent = produto.nomeProduto;
-  document.getElementById('editando-badge').style.display = 'flex';
-
-  /* Scroll suave para o topo para o usuário ver a calculadora preenchida */
-  document.querySelector('.header').scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-/**
- * Cancela o modo de edição de produto salvo.
- * Oculta o badge e limpa o ID de edição.
- * NÃO apaga os campos da calculadora.
- */
-function cancelarEdicao() {
-  produtoEditandoId = null;
-  document.getElementById('editando-badge').style.display = 'none';
-}
-
-/**
- * Remove um produto salvo do localStorage após confirmação.
- * Atualiza a lista automaticamente.
- * Se o produto removido estava sendo editado, cancela o modo de edição.
- * @param {string} id - ID do produto a excluir
- */
-function excluirProduto(id) {
-  const produto = obterProdutos().find(p => p.id === id);
-  const nome    = produto ? produto.nomeProduto : 'este produto';
-
-  if (!confirm(`Excluir "${nome}"? Essa ação não pode ser desfeita.`)) return;
-
-  salvarProdutos(obterProdutos().filter(p => p.id !== id));
-  renderizarProdutos(document.getElementById('pesquisa-produto').value);
-
-  /* Se estava editando o produto excluído, sai do modo de edição */
-  if (produtoEditandoId === id) cancelarEdicao();
-}
-
-/**
- * Filtra a lista de produtos salvos conforme o usuário digita.
- * Busca em tempo real pelo nome do produto.
- */
-function pesquisarProdutos() {
-  renderizarProdutos(document.getElementById('pesquisa-produto').value);
-}
-
-
-/* ─── Inicialização dos Produtos Salvos ──────────────────────────── */
-renderizarProdutos(); /* carrega e exibe produtos salvos ao abrir a página */
 
   </script>
 </body>
