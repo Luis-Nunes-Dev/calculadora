@@ -51,6 +51,13 @@
             <span class="mode-toggle__txt">Modo Confeitaria / Padaria</span>
           </label>
           <p class="hint">Ative para usar a nomenclatura de receita e calcular o custo por unidade produzida.</p>
+        </div> <br>
+
+        <!-- Mão de obra: custo direto por unidade produzida -->
+        <p class="section-lbl">Mão de obra</p>
+        <div class="field">
+          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
+          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
         </div>
 
         <div class="divider"></div>
@@ -101,14 +108,6 @@
         <!-- Texto orientando o preenchimento da Etapa 2 -->
         <p class="card__desc">Informe a mão de obra e suas despesas mensais fixas (aluguel, energia, internet, etc.). O percentual de rateio distribui esses custos proporcionalmente sobre cada produto.</p>
 
-        <!-- Mão de obra -->
-        <p class="section-lbl">Mão de obra</p>
-        <div class="field">
-          <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
-          <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
-        </div>
-
-        <div class="divider"></div>
 
         <!-- Custos fixos mensais — dinâmico -->
         <p class="section-lbl">Custos fixos mensais</p>
