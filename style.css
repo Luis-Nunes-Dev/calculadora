@@ -679,3 +679,20 @@ body {
   line-height: 1.55;
   margin-bottom: 16px;
 }
+
+/* ---------------------------------------------------------------------
+   AVISO DE VALIDAÇÃO DOS INSUMOS (insumo__warn)
+   Mensagem amigável exibida quando há erro de preenchimento no Modo
+   Confeitaria (ex: qtde na receita > qtde total, rendimento = 0).
+   Oculta por padrão; controlada via JS em upInsumo() e calcular().
+--------------------------------------------------------------------- */
+.insumo__warn {
+  font-size: .72rem;
+  color: #92400E;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  border-radius: var(--rs);
+  padding: 6px 10px;
+  margin-top: 8px;
+  line-height: 1.4;
+}

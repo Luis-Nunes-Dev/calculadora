@@ -75,6 +75,9 @@
             <label class="lbl" for="rendimento">Rendimento da receita (unidades)</label>
             <input class="inp" type="number" id="rendimento" placeholder="Ex: 50" min="1" step="1" value="1" />
             <p class="hint">Quantas unidades essa receita produz ao todo.</p>
+
+            <!-- Aviso exibido quando o rendimento é zero ou não preenchido -->
+            <p class="insumo__warn" id="warn-rendimento" style="display:none">⚠ O rendimento deve ser maior que zero para calcular o custo por unidade.</p>
           </div>
         </div>
 
@@ -339,8 +342,9 @@ function onNomeProdutoChange(valor) {
 /**
  * Ativado ao ligar/desligar o Modo Confeitaria / Padaria.
  * Controla a visibilidade dos campos de rendimento e custo por unidade,
- * atualiza os rótulos da seção e do total, e re-renderiza os insumos
- * para que os labels dos campos reflitam o modo ativo.
+ * atualiza os rótulos da seção e do total, re-renderiza os insumos
+ * para que os labels dos campos reflitam o modo ativo, e re-valida
+ * os insumos existentes de acordo com as regras do novo modo.
  */
 function onModoConfeitariaChange() {
   const ativo   = document.getElementById('modo-confeitaria').checked;
@@ -356,6 +360,12 @@ function onModoConfeitariaChange() {
 
   /* Re-renderiza os insumos para aplicar os rótulos do modo ativo */
   renderInsumos();
+  
+  /* Re-valida todos os insumos com as regras do novo modo */
+  insumos.forEach(ins => {
+    revalidarInsumo(ins.id);
+  });
+  
   calcular();
 }
 
@@ -397,6 +407,10 @@ function rmInsumo(id) {
  * Fórmula do custo do insumo:
  *   custo = (valor total pago ÷ quantidade comprada) × quantidade usada
  *
+ * Validações aplicadas:
+ *   - Quantidade Total (comprada) não pode ser zero para evitar divisão por zero
+ *   - No Modo Confeitaria: Quantidade na Receita não pode superar Quantidade Total
+ *
  * @param {number} id - id do insumo sendo editado
  * @param {string} campo - 'nome' | 'vTotal' | 'qtdAdq' | 'qtdUsa'
  * @param {string|number} valor - novo valor digitado no campo
@@ -408,12 +422,48 @@ function upInsumo(id, campo, valor) {
   /* "nome" e "unidade" são texto puro, os demais campos são numéricos */
   ins[campo] = (campo === 'nome' || campo === 'unidade') ? valor : parseNum(valor);
 
-  /* Recalcula o custo deste insumo específico */
-  ins.custo = ins.qtdAdq > 0
+  revalidarInsumo(id);
+}
+
+/**
+ * Re-valida um insumo existente: atualiza a mensagem de erro (se houver),
+ * recalcula o custo e atualiza o display.
+ * Chamada por upInsumo() quando o usuário edita um campo, ou por
+ * onModoConfeitariaChange() para re-validar todos os insumos quando o
+ * modo Confeitaria é ativado/desativado.
+ *
+ * @param {number} id - id do insumo a re-validar
+ */
+function revalidarInsumo(id) {
+  const ins = insumos.find(i => i.id === id);
+  if (!ins) return;
+
+  /* Validações */
+  const warn       = document.getElementById('warn-' + id);
+  const qtdAdqZero = ins.qtdAdq <= 0;
+  const qtdeExcede = ins.qtdAdq > 0 && ins.qtdUsa > ins.qtdAdq;
+
+  if (warn) {
+    if (qtdAdqZero) {
+      warn.textContent = '⚠ A quantidade total deve ser maior que zero para calcular o custo.';
+      warn.style.display = 'block';
+    } else if (qtdeExcede) {
+      warn.textContent = '⚠ A quantidade utilizada na receita não pode ser maior que a quantidade comprada.';
+      warn.style.display = 'block';
+    } else {
+      warn.textContent = '';
+      warn.style.display = 'none';
+    }
+  }
+
+  /* Recalcula o custo deste insumo.
+     qtdAdq ≤ 0  → evita divisão por zero e NaN (custo = 0).
+     qtdeExcede  → estado inválido, zera o custo até o usuário corrigir. */
+  ins.custo = (ins.qtdAdq > 0 && !qtdeExcede)
     ? (ins.vTotal / ins.qtdAdq) * ins.qtdUsa
     : 0;
 
-  /* Atualiza só o "card" de custo deste insumo, sem re-renderizar tudo */
+  /* Atualiza só o display de custo deste insumo, sem re-renderizar tudo */
   const el = document.getElementById('ir-' + id);
   if (el) el.textContent = brl(ins.custo);
 
@@ -428,8 +478,8 @@ function upInsumo(id, campo, valor) {
  * Edições de campo numéricas/texto usam upInsumo() para evitar perda de foco.
  *
  * Layout: Nome do insumo em linha full-width, seguido de grid 2×2:
- *   [Valor total pago]  [Qtd. comprada ]
- *   [Qtd. usada]        [Custo calculado]
+ *   [Valor pago]  [Qtd. comprada ]
+ *   [Qtd. usada]  [Custo calculado]
  * No Modo Confeitaria os rótulos das colunas mudam para a nomenclatura de receita.
  */
 function renderInsumos() {
@@ -438,12 +488,12 @@ function renderInsumos() {
   const modo  = document.getElementById('modo-confeitaria').checked;
 
   /* Rótulos adaptativos: modo padrão vs. Confeitaria / Padaria */
-  const lblNome = modo ? 'Ingrediente'           : 'Nome do insumo';
-  const lblVlr  = modo ? 'Valor total pago (R$)' : 'Valor total pago (R$)';
-  const lblAdq  = modo ? 'Qtde total'            : 'Qtd. comprada';
-  const lblUsa  = modo ? 'Qtde na receita'       : 'Qtd. usada na produção';
-  const phAdq   = modo ? 'Ex: 500 (g/ml)'        : 'Ex: 5 (kg/un/L…)';
-  const phUsa   = modo ? 'Ex: 100 (g/ml)'        : 'Ex: 0,5';
+  const lblNome = modo ? 'Nome do ingrediente'        : 'Nome do insumo';
+  const lblVlr  = 'Valor pago (R$)';
+  const lblAdq  = modo ? 'Qtde total (g/ml)'          : 'Qtd. comprada (g/ml)';
+  const lblUsa  = modo ? 'Qtde na receita (g/ml)'     : 'Qtd. usada (g/ml)';
+  const phAdq   = modo ? 'Ex: 500'                    : 'Ex: 500';
+  const phUsa   = modo ? 'Ex: 100'                    : 'Ex: 100';
 
   /* Mostra a mensagem de "lista vazia" só quando não há insumos */
   empty.style.display = insumos.length === 0 ? 'block' : 'none';
@@ -497,12 +547,16 @@ function renderInsumos() {
           />
         </div>
 
-        <div class="insumo__result-cell">
-          <span class="lbl">Custo calculado</span>
-          <div class="insumo__result-val" id="ir-${ins.id}">${brl(ins.custo)}</div>
+          <div class="insumo__result-cell">
+            <span class="lbl">Custo calculado</span>
+            <div class="insumo__result-val" id="ir-${ins.id}">${brl(ins.custo)}</div>
+          </div>
+
         </div>
 
-      </div>
+        <!-- Aviso de validação — exibido via JS quando qtdUsa > qtdAdq no Modo Confeitaria -->
+        <p class="insumo__warn" id="warn-${ins.id}" style="display:none"></p>
+
     </div>
   `).join('');
 }
@@ -611,11 +665,21 @@ function calcular() {
   /* --- Modo Confeitaria / Padaria ---
      Quando ativo, o custo total dos insumos representa o lote inteiro.
      O campo "rendimento" divide esse custo pelo número de unidades produzidas,
-     obtendo o custo de insumos por unidade. Em modo padrão, rendimento = 1. */
+     obtendo o custo de insumos por unidade. Em modo padrão, rendimento = 1.
+     
+     Validação: o rendimento nunca pode ser menor que 1 para evitar
+     divisão por zero e cálculos inválidos (NaN/Infinity). */
   const modoConfeitaria = document.getElementById('modo-confeitaria').checked;
+  const rendimentoInput = parseNum(document.getElementById('rendimento').value);
   const rendimento      = modoConfeitaria
-    ? Math.max(1, parseNum(document.getElementById('rendimento').value) || 1)
+    ? Math.max(1, rendimentoInput || 1)
     : 1;
+
+  /* Exibe aviso quando o rendimento é zero ou vazio no Modo Confeitaria */
+  const warnRend = document.getElementById('warn-rendimento');
+  if (warnRend) {
+    warnRend.style.display = (modoConfeitaria && rendimentoInput <= 0) ? 'block' : 'none';
+  }
 
   /* --- Etapa 1: soma de todos os insumos (custo total do lote ou por unidade) --- */
   const totalInsumos    = insumos.reduce((s, i) => s + i.custo, 0);
