@@ -226,10 +226,34 @@
           </div>
 
         </div>
+
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="save-bar">
+          <button class="btn-save" onclick="salvarProdutoAtual()">💾 Salvar Produto</button>
+          <span class="save-bar__msg" id="save-msg"></span>
+        </div>
+
       </div>
     </section>
 
+
   </main>
+
+  <!-- ============================
+       PRODUTOS SALVOS
+  ============================ -->
+  <section class="saved-section">
+    <div class="saved-section__head">
+      <h2 class="saved-section__title">Produtos Salvos</h2>
+      <p class="saved-section__desc">Produtos salvos localmente neste navegador.</p>
+    </div>
+
+    <div id="produtos-salvos-list" class="produtos-grid"></div>
+    <p id="empty-produtos-salvos" class="empty">Nenhum produto salvo.</p>
+  </section>
 
   <footer class="footer">
     <p>Desenvolvido por <a href="https://github.com/luisnunes" target="_blank" rel="noopener noreferrer">Luis Nunes</a></p>
@@ -754,6 +778,266 @@ function calcular() {
 
 
 /* =========================================================
+   PRODUTOS SALVOS (LocalStorage)
+   Módulo isolado de persistência. Toda a leitura/escrita de
+   produtos salvos passa por "ProdutoStorage", para que no
+   futuro seja possível trocar o LocalStorage por uma API/banco
+   de dados alterando apenas esse objeto, sem tocar no resto
+   da aplicação.
+========================================================= */
+const ProdutoStorage = {
+  _KEY: 'produtosSalvos',
+
+  listar() {
+    try {
+      const raw = localStorage.getItem(this._KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      console.error('Erro ao ler produtos salvos:', e);
+      return [];
+    }
+  },
+
+  salvar(lista) {
+    try {
+      localStorage.setItem(this._KEY, JSON.stringify(lista));
+      return true;
+    } catch (e) {
+      console.error('Erro ao salvar produtos:', e);
+      return false;
+    }
+  },
+
+  obterPorId(id) {
+    return this.listar().find(p => p.id === id) || null;
+  },
+
+  upsert(produto) {
+    const lista = this.listar();
+    const idx = lista.findIndex(p => p.id === produto.id);
+    if (idx >= 0) {
+      lista[idx] = produto;
+    } else {
+      lista.push(produto);
+    }
+    this.salvar(lista);
+  },
+
+  excluir(id) {
+    const lista = this.listar().filter(p => p.id !== id);
+    this.salvar(lista);
+  }
+};
+
+/* Guarda o id do produto atualmente carregado para edição.
+   null = novo produto (será criado um registro novo ao salvar). */
+let produtoEmEdicaoId = null;
+
+/**
+ * Coleta todo o estado atual da aplicação (Etapas 1, 2 e 3)
+ * em um objeto serializável, pronto para ser salvo.
+ */
+function coletarDadosProduto() {
+  return {
+    id: produtoEmEdicaoId || ('p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
+    nomeProduto: document.getElementById('nome-produto').value,
+    modoConfeitaria: document.getElementById('modo-confeitaria').checked,
+    maoObra: document.getElementById('mao-obra').value,
+    rendimento: document.getElementById('rendimento').value,
+    insumos: JSON.parse(JSON.stringify(insumos)),
+    custosFixos: JSON.parse(JSON.stringify(custosFixos)),
+    rateioPct: document.getElementById('rateio-pct').value,
+    impostos: document.getElementById('impostos').value,
+    margem1: document.getElementById('margem1').value,
+    margem2: document.getElementById('margem2').value,
+    criadoEm: produtoEmEdicaoId ? (ProdutoStorage.obterPorId(produtoEmEdicaoId)?.criadoEm || new Date().toISOString()) : new Date().toISOString(),
+    atualizadoEm: new Date().toISOString()
+  };
+}
+
+/**
+ * Aplica um produto salvo de volta na interface, preenchendo
+ * todos os campos e reconstruindo os arrays de insumos/custos fixos.
+ */
+function aplicarDadosProduto(p) {
+  produtoEmEdicaoId = p.id;
+
+  document.getElementById('nome-produto').value = p.nomeProduto || '';
+  onNomeProdutoChange(p.nomeProduto || '');
+
+  document.getElementById('modo-confeitaria').checked = !!p.modoConfeitaria;
+  document.getElementById('mao-obra').value = p.maoObra || '';
+  document.getElementById('rendimento').value = p.rendimento || 1;
+
+  insumos = JSON.parse(JSON.stringify(p.insumos || []));
+  nextInsumoId = insumos.reduce((max, i) => Math.max(max, i.id + 1), 0);
+
+  custosFixos = JSON.parse(JSON.stringify(p.custosFixos || []));
+  nextCFId = custosFixos.reduce((max, c) => Math.max(max, c.id + 1), 0);
+
+  document.getElementById('rateio-pct').value = p.rateioPct ?? 5;
+  document.getElementById('impostos').value = p.impostos || '';
+  document.getElementById('margem1').value = p.margem1 ?? 30;
+  document.getElementById('margem2').value = p.margem2 ?? 50;
+
+  /* Atualiza visibilidade dos blocos do Modo Confeitaria */
+  onModoConfeitariaChange();
+
+  renderInsumos();
+  renderCustosFixos();
+  calcular();
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * Salva (cria ou atualiza) o produto atualmente preenchido na tela.
+ * Chamado pelo botão "Salvar Produto".
+ */
+function salvarProdutoAtual() {
+  const dados = coletarDadosProduto();
+  ProdutoStorage.upsert(dados);
+
+  const msg = document.getElementById('save-msg');
+  if (msg) {
+    msg.textContent = '✔ Produto salvo!';
+    setTimeout(() => { msg.textContent = ''; }, 2500);
+  }
+
+  renderProdutosSalvos();
+  limparFormulario();
+}
+
+/**
+ * Limpa todos os campos da aplicação, voltando ao estado inicial
+ * (um insumo e um custo fixo em branco), para permitir cadastrar
+ * um novo produto sem precisar apagar campo por campo.
+ */
+function limparFormulario() {
+  produtoEmEdicaoId = null;
+
+  document.getElementById('nome-produto').value = '';
+  onNomeProdutoChange('');
+
+  document.getElementById('modo-confeitaria').checked = false;
+  document.getElementById('mao-obra').value = '';
+  document.getElementById('rendimento').value = 1;
+
+  insumos = [];
+  nextInsumoId = 0;
+  custosFixos = [];
+  nextCFId = 0;
+
+  document.getElementById('rateio-pct').value = 5;
+  document.getElementById('impostos').value = '';
+  document.getElementById('margem1').value = 30;
+  document.getElementById('margem2').value = 50;
+
+  onModoConfeitariaChange();
+
+  addInsumo();
+  addCustoFixo();
+}
+
+/**
+ * Carrega um produto salvo para edição.
+ * @param {string} id
+ */
+function editarProdutoSalvo(id) {
+  const p = ProdutoStorage.obterPorId(id);
+  if (!p) return;
+  aplicarDadosProduto(p);
+}
+
+/**
+ * Exclui um produto salvo, após confirmação do usuário.
+ * @param {string} id
+ */
+function excluirProdutoSalvo(id) {
+  const p = ProdutoStorage.obterPorId(id);
+  const nome = p?.nomeProduto?.trim() || 'este produto';
+  const ok = confirm(`Tem certeza que deseja excluir "${nome}"? Essa ação não pode ser desfeita.`);
+  if (!ok) return;
+
+  ProdutoStorage.excluir(id);
+
+  /* Se o produto excluído era o que estava em edição, volta ao modo "novo produto" */
+  if (produtoEmEdicaoId === id) {
+    produtoEmEdicaoId = null;
+  }
+
+  renderProdutosSalvos();
+}
+
+/**
+ * Renderiza a lista de cards de produtos salvos.
+ */
+function renderProdutosSalvos() {
+  const list  = document.getElementById('produtos-salvos-list');
+  const empty = document.getElementById('empty-produtos-salvos');
+  const produtos = ProdutoStorage.listar()
+    .slice()
+    .sort((a, b) => new Date(b.atualizadoEm) - new Date(a.atualizadoEm));
+
+  empty.style.display = produtos.length === 0 ? 'block' : 'none';
+
+  const fmtData = iso => {
+    try {
+      return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch (e) { return ''; }
+  };
+
+  const custoUnit = p => {
+    const totalInsumos = (p.insumos || []).reduce((s, i) => s + (i.custo || 0), 0);
+    const rendimento = p.modoConfeitaria ? Math.max(1, parseNum(p.rendimento) || 1) : 1;
+    return totalInsumos / rendimento;
+  };
+
+  const precoIdeal = p => {
+    const totalInsumos = (p.insumos || []).reduce((s, i) => s + (i.custo || 0), 0);
+    const rendimento = p.modoConfeitaria ? Math.max(1, parseNum(p.rendimento) || 1) : 1;
+    const insumosUnit = totalInsumos / rendimento;
+    const baseCusto = insumosUnit + parseNum(p.maoObra);
+    const totalCF = (p.custosFixos || []).reduce((s, c) => s + (c.valor || 0), 0);
+    const rateioValor = totalCF * (parseNum(p.rateioPct) / 100);
+    const precoCusto = baseCusto + rateioValor;
+    const precoMinimo = precoCusto * (1 + parseNum(p.impostos) / 100);
+    return precoMinimo * (1 + parseNum(p.margem1) / 100);
+  };
+
+  list.innerHTML = produtos.map(p => `
+    <div class="produto-card">
+      <div class="produto-card__head">
+        <h3 class="produto-card__nome">${(p.nomeProduto || 'Produto sem nome').replace(/</g, '&lt;')}</h3>
+      </div>
+      <div class="produto-card__body">
+        <div class="produto-card__row">
+          <span class="produto-card__lbl">Custo por unidade</span>
+          <span class="produto-card__val">${brl(custoUnit(p))}</span>
+        </div>
+        <div class="produto-card__row">
+          <span class="produto-card__lbl">Preço ideal</span>
+          <span class="produto-card__val">${brl(precoIdeal(p))}</span>
+        </div>
+        <div class="produto-card__row">
+          <span class="produto-card__lbl">Criado em</span>
+          <span class="produto-card__val">${fmtData(p.criadoEm)}</span>
+        </div>
+        <div class="produto-card__row">
+          <span class="produto-card__lbl">Última alteração</span>
+          <span class="produto-card__val">${fmtData(p.atualizadoEm)}</span>
+        </div>
+      </div>
+      <div class="produto-card__actions">
+        <button class="btn-card btn-card--edit" onclick="editarProdutoSalvo('${p.id}')">Editar</button>
+        <button class="btn-card btn-card--del" onclick="excluirProdutoSalvo('${p.id}')">Excluir</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+
+/* =========================================================
    INICIALIZAÇÃO
    Ao carregar a página, já deixamos um insumo e um custo fixo
    pré-criados para guiar o usuário, e disparamos o primeiro cálculo.
@@ -761,6 +1045,7 @@ function calcular() {
 addInsumo();      /* um insumo pré-carregado */
 addCustoFixo();   /* um custo fixo pré-carregado */
 calcular();        /* calcula os valores iniciais (tudo zerado) */
+renderProdutosSalvos(); /* carrega os produtos salvos do LocalStorage */
 
   </script>
 </body>

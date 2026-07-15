@@ -696,3 +696,175 @@ body {
   margin-top: 8px;
   line-height: 1.4;
 }
+/* ---------------------------------------------------------------------
+   PRODUTOS SALVOS — NOVA FUNCIONALIDADE
+   Barra de ação "Salvar Produto" + seção e cards de produtos salvos
+   via LocalStorage. Segue a identidade visual já existente
+   (mesmas variáveis de cor, raio, sombra e tipografia).
+--------------------------------------------------------------------- */
+
+.save-bar {
+  max-width: 720px;
+  margin: 4px auto 32px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.btn-save {
+  background: var(--step1);
+  color: #fff;
+  border: none;
+  border-radius: var(--rs);
+  padding: 12px 22px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: .92rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: filter .15s ease, transform .05s ease;
+}
+
+.btn-save:hover {
+  filter: brightness(1.08);
+}
+
+.btn-save:active {
+  transform: translateY(1px);
+}
+
+.save-bar__msg {
+  color: var(--c-ideal);
+  font-weight: 600;
+  font-size: .85rem;
+}
+
+.saved-section {
+  max-width: 1320px;
+  margin: 0 auto 48px;
+  padding: 0 20px;
+}
+
+.saved-section__head {
+  margin-bottom: 16px;
+}
+
+.saved-section__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.saved-section__desc {
+  color: var(--muted);
+  font-size: .85rem;
+  margin-top: 4px;
+}
+
+.produtos-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.produto-card {
+  background: var(--surface);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .produtos-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .produtos-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.produto-card {
+  background: var(--surface);
+  border: 1px solid var(--border-lt);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.produto-card__head {
+  border-bottom: 1px solid var(--border-lt);
+  padding-bottom: 10px;
+}
+
+.produto-card__nome {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.produto-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.produto-card__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: .82rem;
+}
+
+.produto-card__lbl {
+  color: var(--muted);
+}
+
+.produto-card__val {
+  font-family: var(--mono);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.produto-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-card {
+  flex: 1;
+  border: none;
+  border-radius: var(--rs);
+  padding: 9px 10px;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: .82rem;
+  cursor: pointer;
+  transition: filter .15s ease;
+}
+
+.btn-card--edit {
+  background: var(--step1);
+  color: #fff;
+}
+
+.btn-card--del {
+  background: #FEE2E2;
+  color: var(--c-danger);
+}
+
+.btn-card:hover {
+  filter: brightness(1.06);
+}
