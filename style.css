@@ -65,7 +65,7 @@ html { scroll-behavior: smooth; }
 body {
   font-family: var(--sans);
   background-color: #F7FBFA;
-  background-image: linear-gradient(120deg, rgba(255,255,255,0.72), rgba(247,251,250,0.86)), url("background.svg");
+  background-image: url("fundo_verde_novo.png");
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -82,8 +82,8 @@ body {
    descrição curta do que ela faz.
 --------------------------------------------------------------------- */
 .header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border-lt);
+  background: transparent;
+  border-bottom: 1px solid rgba(255,255,255,0.25);
   padding: 30px 24px 26px;
   text-align: center;
 }
