@@ -230,7 +230,27 @@ body {
   color: var(--accent-gold);
   margin-bottom: 10px;
 }
-
+.section-lbl--sub {
+  margin-bottom: 8px;
+  color: var(--primary);
+}
+.labor-calc {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--rs);
+  background: var(--surface-alt);
+}
+.labor-calc__result {
+  margin-top: 10px;
+  padding: 9px 10px;
+  border-radius: var(--rs);
+  background: var(--primary-pale);
+  color: var(--primary);
+  font-family: var(--mono);
+  font-size: .8rem;
+  font-weight: 600;
+}
 /* ---------------------------------------------------------------------
    BOTÃO REMOVER (compartilhado)
    Botão "✕" usado tanto nos insumos quanto nos custos fixos para
@@ -463,6 +483,7 @@ body {
 .result--custo  { border-left-color: var(--c-custo); }
 .result--minimo { border-left-color: var(--c-minimo); }
 .result--ideal  { border-left-color: var(--c-ideal); }
+.result--ideal-unidade { border-left-color: var(--c-ideal); }
 .result--lucro  { border-left-color: var(--c-lucro); }
 
 .result__lbl {
@@ -475,6 +496,7 @@ body {
 .result--custo  .result__lbl { color: var(--c-custo); }
 .result--minimo .result__lbl { color: var(--c-minimo); }
 .result--ideal  .result__lbl { color: var(--c-ideal); }
+.result--ideal-unidade .result__lbl { color: var(--c-ideal); }
 .result--lucro  .result__lbl { color: var(--c-lucro); }
 
 .result__val {

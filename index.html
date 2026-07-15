@@ -62,6 +62,20 @@
           <input class="inp" type="number" id="mao-obra" placeholder="0,00" min="0" step="0.01" />
         </div>
 
+        <div class="labor-calc">
+          <p class="section-lbl section-lbl--sub">Cálculo da Mão de Obra</p>
+          <div class="field">
+            <label class="lbl" for="valor-hora">Valor da Hora (R$)</label>
+            <input class="inp" type="text" id="valor-hora" placeholder="0,00" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label class="lbl" for="tempo-trabalhado">Tempo Trabalhado</label>
+            <input class="inp" type="text" id="tempo-trabalhado" placeholder="HH:MM" inputmode="numeric" maxlength="5" value="00:00" />
+            <p class="hint">Use o formato HH:MM. Ex.: 02:30.</p>
+          </div>
+          <div class="labor-calc__result" id="mao-obra-calculada">Mão de obra calculada: R$ 0,00</div>
+        </div>
+
         <div class="divider"></div>
 
         <p class="section-lbl" id="insumos-section-lbl">Insumos utilizados</p>
@@ -184,6 +198,17 @@
             <div class="result__lbl">Preço mínimo de venda</div>
             <div class="result__val" id="r-minimo">R$ 0,00</div>
             <div class="result__sub" id="r-minimo-sub">Custo + impostos (0%)</div>
+          </div>
+
+          <div class="result result--ideal-unidade" id="confeitaria-preco-ideal-unidade" style="display:none;">
+            <div class="result__lbl">Preço de Venda da Unidade</div>
+            <div class="result__val" id="r-ideal-unidade">R$ 0,00</div>
+            <div class="result__sub" id="r-ideal-unidade-formula">Custo unitário: R$ 0,00</div>
+            <div class="field" style="margin-top:10px;">
+              <label class="lbl" for="margem-unidade">Margem sobre a Unidade (%)</label>
+              <input class="inp" type="number" id="margem-unidade" placeholder="30" min="0" step="0.1" value="30" />
+            </div>
+            <div class="result__sub" id="r-ideal-unidade-detalhes" style="margin-top:8px;">Margem aplicada: 30% · Lucro por unidade: R$ 0,00</div>
           </div>
         </div>
 
@@ -333,6 +358,23 @@ function parseNum(v) {
 
   const n = parseFloat(normalized);
   return isNaN(n) ? 0 : Math.max(0, n);
+}
+
+function parseTempoTrabalhado(valor) {
+  const texto = String(valor || '').trim();
+  const match = texto.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return { horas: 0, minutos: 0 };
+
+  const horas = parseInt(match[1], 10);
+  const minutos = parseInt(match[2], 10);
+  return {
+    horas: isNaN(horas) ? 0 : horas,
+    minutos: isNaN(minutos) ? 0 : minutos
+  };
+}
+
+function formatarTempoTrabalhado(horas, minutos) {
+  return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
 }
 
 /**
@@ -666,6 +708,26 @@ function renderCustosFixos() {
    e atualiza a interface inteira em tempo real.
 ========================================================= */
 
+function calcularTempoParaHoras(tempo) {
+  const texto = String(tempo || '').trim();
+  if (!texto) return 0;
+
+  const match = texto.match(/^(\d{1,2}):(\d{1,2})$/);
+  if (!match) return 0;
+
+  const horas = parseInt(match[1], 10);
+  const minutos = parseInt(match[2], 10);
+  if (minutos > 59) return 0;
+
+  return horas + (minutos / 60);
+}
+
+function calcularMaoObraPorHora(valorHora, tempoTrabalhado) {
+  const valor = parseNum(valorHora);
+  const horas = calcularTempoParaHoras(tempoTrabalhado);
+  return valor * horas;
+}
+
 /**
  * Recalcula todos os valores derivados (totais, preços e lucros) e
  * atualiza todos os elementos de resultado na tela.
@@ -684,11 +746,15 @@ function renderCustosFixos() {
  */
 function calcular() {
   /* --- Leitura dos campos simples --- */
-  const maoObra   = parseNum(document.getElementById('mao-obra').value);
-  const rateioPct = parseNum(document.getElementById('rateio-pct').value);
-  const imposto   = parseNum(document.getElementById('impostos').value);
-  const margem1   = parseNum(document.getElementById('margem1').value);
-  const margem2   = parseNum(document.getElementById('margem2').value);
+  const maoObraManual = parseNum(document.getElementById('mao-obra').value);
+  const valorHora     = parseNum(document.getElementById('valor-hora').value);
+  const tempoTrabalhado = document.getElementById('tempo-trabalhado').value;
+  const maoObraCalc   = calcularMaoObraPorHora(valorHora, tempoTrabalhado);
+  const maoObra       = maoObraManual + maoObraCalc;
+  const rateioPct     = parseNum(document.getElementById('rateio-pct').value);
+  const imposto       = parseNum(document.getElementById('impostos').value);
+  const margem1       = parseNum(document.getElementById('margem1').value);
+  const margem2       = parseNum(document.getElementById('margem2').value);
 
   /* --- Modo Confeitaria / Padaria ---
      Quando ativo, o custo total dos insumos representa o lote inteiro.
@@ -736,8 +802,19 @@ function calcular() {
   const lucro2       = precoIdeal2 - precoCusto;
   const lucroRel2     = precoIdeal2 > 0 ? (lucro2 / precoIdeal2) * 100 : 0;
 
+  /* --- Novo resultado exclusivo do Modo Confeitaria --- */
+  const precoIdealUnidade = modoConfeitaria && rendimento > 0 ? precoIdeal1 / rendimento : 0;
+  const blocoPrecoIdealUnidade = document.getElementById('confeitaria-preco-ideal-unidade');
+  if (blocoPrecoIdealUnidade) {
+    blocoPrecoIdealUnidade.style.display = modoConfeitaria ? 'block' : 'none';
+  }
+
   /* --- Atualiza os displays da Etapa 1 --- */
   set('total-insumos', brl(totalInsumos));
+  const maoObraCalcEl = document.getElementById('mao-obra-calculada');
+  if (maoObraCalcEl) {
+    maoObraCalcEl.textContent = `Mão de obra calculada: ${brl(maoObraCalc)}`;
+  }
 
   /* No Modo Confeitaria, exibe também o custo dividido por unidade */
   if (modoConfeitaria) {
@@ -763,6 +840,24 @@ function calcular() {
   document.getElementById('r-lucro-1-pct').textContent =
     `${lucroRel1.toFixed(1)}% sobre o preço ideal`;
 
+  const margemUnidade = parseNum(document.getElementById('margem-unidade').value);
+  const precoMinimoPorUnidade = modoConfeitaria && rendimento > 0 ? precoMinimo / rendimento : 0;
+  const precoIdealUnidadeMargem = modoConfeitaria && rendimento > 0 ? precoMinimoPorUnidade * (1 + margemUnidade / 100) : 0;
+  const lucroPorUnidade = modoConfeitaria && rendimento > 0 ? precoIdealUnidadeMargem - precoMinimoPorUnidade : 0;
+  set('r-ideal-unidade', brl(precoIdealUnidadeMargem));
+  const formulaIdealUnidade = document.getElementById('r-ideal-unidade-formula');
+  const detalhesIdealUnidade = document.getElementById('r-ideal-unidade-detalhes');
+  if (formulaIdealUnidade) {
+    formulaIdealUnidade.textContent = modoConfeitaria && rendimento > 0
+      ? `Custo unitário: ${brl(precoMinimoPorUnidade)}`
+      : 'Informe um rendimento válido';
+  }
+  if (detalhesIdealUnidade) {
+    detalhesIdealUnidade.textContent = modoConfeitaria && rendimento > 0
+      ? `Margem aplicada: ${margemUnidade.toFixed(1)}% · Lucro por unidade: ${brl(lucroPorUnidade)}`
+      : 'Margem aplicada: 0,0% · Lucro por unidade: R$ 0,00';
+  }
+
   set('r-ideal-2', brl(precoIdeal2));
   set('r-lucro-2', brl(lucro2));
   document.getElementById('r-lucro-2-pct').textContent =
@@ -776,7 +871,7 @@ function calcular() {
    rateio, impostos e as duas margens) recalculam tudo a cada
    alteração, em tempo real.
 ========================================================= */
-['mao-obra', 'rateio-pct', 'impostos', 'margem1', 'margem2', 'rendimento'].forEach(id =>
+['mao-obra', 'valor-hora', 'tempo-trabalhado', 'rateio-pct', 'impostos', 'margem1', 'margem2', 'rendimento', 'margem-unidade'].forEach(id =>
   document.getElementById(id).addEventListener('input', calcular)
 );
 
@@ -847,6 +942,8 @@ function coletarDadosProduto() {
     nomeProduto: document.getElementById('nome-produto').value,
     modoConfeitaria: document.getElementById('modo-confeitaria').checked,
     maoObra: document.getElementById('mao-obra').value,
+    valorHora: document.getElementById('valor-hora').value,
+    tempoTrabalhado: document.getElementById('tempo-trabalhado').value,
     rendimento: document.getElementById('rendimento').value,
     insumos: JSON.parse(JSON.stringify(insumos)),
     custosFixos: JSON.parse(JSON.stringify(custosFixos)),
@@ -871,6 +968,8 @@ function aplicarDadosProduto(p) {
 
   document.getElementById('modo-confeitaria').checked = !!p.modoConfeitaria;
   document.getElementById('mao-obra').value = p.maoObra || '';
+  document.getElementById('valor-hora').value = p.valorHora || '';
+  document.getElementById('tempo-trabalhado').value = p.tempoTrabalhado || '00:00';
   document.getElementById('rendimento').value = p.rendimento || 1;
 
   insumos = JSON.parse(JSON.stringify(p.insumos || []));
@@ -925,6 +1024,8 @@ function limparFormulario() {
 
   document.getElementById('modo-confeitaria').checked = false;
   document.getElementById('mao-obra').value = '';
+  document.getElementById('valor-hora').value = '';
+  document.getElementById('tempo-trabalhado').value = '00:00';
   document.getElementById('rendimento').value = 1;
 
   insumos = [];
@@ -991,17 +1092,25 @@ function renderProdutosSalvos() {
     } catch (e) { return ''; }
   };
 
+  const maoObraTotal = p => {
+    const maoObraManual = parseNum(p.maoObra);
+    const valorHora = parseNum(p.valorHora);
+    const horas = calcularTempoParaHoras(p.tempoTrabalhado);
+    const maoObraCalc = valorHora * horas;
+    return maoObraManual + maoObraCalc;
+  };
+
   const custoUnit = p => {
     const totalInsumos = (p.insumos || []).reduce((s, i) => s + (i.custo || 0), 0);
     const rendimento = p.modoConfeitaria ? Math.max(1, parseNum(p.rendimento) || 1) : 1;
-    return totalInsumos / rendimento;
+    return (totalInsumos / rendimento) + maoObraTotal(p);
   };
 
   const precoIdeal = p => {
     const totalInsumos = (p.insumos || []).reduce((s, i) => s + (i.custo || 0), 0);
     const rendimento = p.modoConfeitaria ? Math.max(1, parseNum(p.rendimento) || 1) : 1;
     const insumosUnit = totalInsumos / rendimento;
-    const baseCusto = insumosUnit + parseNum(p.maoObra);
+    const baseCusto = insumosUnit + maoObraTotal(p);
     const totalCF = (p.custosFixos || []).reduce((s, c) => s + (c.valor || 0), 0);
     const rateioValor = totalCF * (parseNum(p.rateioPct) / 100);
     const precoCusto = baseCusto + rateioValor;
