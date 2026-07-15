@@ -668,16 +668,42 @@ body {
 
 
 /* ---------------------------------------------------------------------
-   TEXTO DESCRITIVO DO CARD (card__desc)
-   Parágrafo curto de orientação no topo do corpo dos cards da Etapa 1
-   e Etapa 2, logo após o cabeçalho. Mesmo estilo visual do restante
-   da interface: fonte pequena, cor suave, linha generosa.
+   TEXTO DE AJUDA DO CARD (card__help)
+   Um botão de ajuda leve que revela o texto explicativo quando clicado.
+   Mantém o layout atual e evita adicionar elementos extras fora do card.
 --------------------------------------------------------------------- */
-.card__desc {
+.card__help {
+  margin-bottom: 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--rs);
+  background: #FAFBFD;
+  padding: 0;
+}
+.card__help summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  user-select: none;
+}
+.card__help summary::-webkit-details-marker { display: none; }
+.card__help summary::after {
+  content: '❯';
+  margin-left: auto;
+  transition: transform .2s ease;
+}
+.card__help[open] summary::after { transform: rotate(90deg); }
+.card__help .help-text {
+  padding: 0 12px 12px;
   font-size: .8rem;
   color: var(--muted);
   line-height: 1.55;
-  margin-bottom: 16px;
 }
 
 /* ---------------------------------------------------------------------
