@@ -11,37 +11,48 @@
    facilita trocar a paleta inteira da calculadora sem editar o resto.
 --------------------------------------------------------------------- */
 :root {
-  --bg:        #EEF1F7;   /* fundo geral da página */
+  --bg:        #F7FBFA;   /* fundo geral da página */
+  --bg-soft:   #EEF8F4;   /* fundo secundário suave */
   --surface:   #FFFFFF;   /* fundo dos cards */
-  --border:    #D4D9E8;   /* borda padrão de inputs */
-  --border-lt: #E8ECF4;   /* borda mais clara (divisores, cards internos) */
+  --surface-alt:#F7FBFA;  /* fundo alternativo de blocos */
+  --border:    #E5ECE9;   /* borda padrão de inputs */
+  --border-lt: #E5ECE9;   /* borda mais clara (divisores, cards internos) */
+
+  /* Cor de identidade principal */
+  --primary: #138A6A;      /* verde esmeralda */
+  --primary-hover: #0F7057;/* hover dos botões */
+  --primary-soft: #4FC7A5;/* verde claro / detalhes */
+  --primary-pale: #F1FBF7; /* hover de inputs */
+  --accent-blue: #1D4E5F;  /* azul petróleo — links e ícones */
+  --accent-gold: #C9A227;  /* dourado suave — detalhes */
 
   /* Cor de identidade de cada etapa (badges "Etapa 1/2/3") */
-  --step1: #2563EB;   /* azul   — Etapa 1, Produto/Insumos */
-  --step2: #7C3AED;   /* violeta — Etapa 2, Despesas Fixas */
-  --step3: #0F172A;   /* navy    — Etapa 3, Resultado */
+  --step1: #138A6A;   /* verde   — Etapa 1, Produto/Insumos */
+  --step2: #4FC7A5;   /* mint    — Etapa 2, Despesas Fixas */
+  --step3: #1F2937;   /* cinza quase preto — Etapa 3, Resultado */
 
   /* Cores semânticas dos blocos de resultado final */
-  --c-custo:  #64748B;  /* cinza   — preço de custo */
-  --c-minimo: #D97706;  /* laranja — preço mínimo */
-  --c-ideal:  #16A34A;  /* verde   — preço ideal */
-  --c-lucro:  #2563EB;  /* azul    — lucro estimado */
-  --c-danger: #EF4444;  /* vermelho — ações destrutivas (remover) */
+  --c-custo:  #6B7280;  /* cinza   — preço de custo */
+  --c-minimo: #F59E0B;  /* laranja — preço mínimo */
+  --c-ideal:  #138A6A;  /* verde   — preço ideal */
+  --c-lucro:  #10B981;  /* verde   — lucro estimado */
+  --c-danger: #DC2626;  /* vermelho forte — ações destrutivas */
+  --c-danger-soft: #F87171; /* vermelho suave */
 
   /* Texto */
-  --text:  #0F172A;
-  --muted: #64748B;
-  --faint: #94A3B8;
+  --text:  #1F2937;
+  --muted: #6B7280;
+  --faint: #9CA3AF;
 
   /* Tipografia: sans para textos de interface, mono para números/valores */
   --sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   --mono: 'JetBrains Mono', 'Courier New', monospace;
 
   /* Raio de borda padrão */
-  --r:  12px;  /* cards */
-  --rs: 7px;   /* elementos internos (inputs, botões, caixas) */
+  --r:  18px;  /* cards */
+  --rs: 10px;  /* elementos internos (inputs, botões, caixas) */
 
-  --shadow: 0 1px 3px rgba(15,23,42,.05), 0 6px 20px rgba(15,23,42,.06);
+  --shadow: 0 10px 30px rgba(16,24,40,.05);
 }
 
 /* ---------------------------------------------------------------------
@@ -53,7 +64,12 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: var(--sans);
-  background: var(--bg);
+  background-color: #F7FBFA;
+  background-image: linear-gradient(120deg, rgba(255,255,255,0.72), rgba(247,251,250,0.86)), url("background.svg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   padding-bottom: 64px;
@@ -76,7 +92,7 @@ body {
   font-weight: 700;
   letter-spacing: .13em;
   text-transform: uppercase;
-  color: var(--step1);
+  color: var(--accent-blue);
   margin-bottom: 8px;
 }
 .header__title {
@@ -115,6 +131,7 @@ body {
 --------------------------------------------------------------------- */
 .card {
   background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--r);
   box-shadow: var(--shadow);
   overflow: hidden;
@@ -169,7 +186,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .07em;
-  color: var(--muted);
+  color: var(--accent-blue);
 }
 /* Texto de ajuda pequeno, usado para sugestões e explicações de fórmula */
 .hint {
@@ -181,21 +198,21 @@ body {
   font-family: var(--mono);
   font-size: .875rem;
   padding: 9px 11px;
-  border: 1.5px solid var(--border);
+  border: 1px solid #DDE7E3;
   border-radius: var(--rs);
   color: var(--text);
-  background: #FAFBFD;
+  background: #FFFFFF;
   width: 100%;
   transition: border-color .15s, box-shadow .15s, background .15s;
 }
 .inp:focus {
   outline: none;
   background: #fff;
-  border-color: var(--step1);
-  box-shadow: 0 0 0 3px rgba(37,99,235,.11);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(19,138,106,.12);
 }
 /* Remove as setinhas (spinners) padrão dos inputs numéricos */
-.inp[type=number]                            { -moz-appearance: textfield; }
+.inp[type=number] { appearance: textfield; -moz-appearance: textfield; }
 .inp[type=number]::-webkit-inner-spin-button,
 .inp[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
@@ -210,7 +227,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: .1em;
-  color: var(--faint);
+  color: var(--accent-gold);
   margin-bottom: 10px;
 }
 
@@ -224,7 +241,7 @@ body {
   top: 8px; right: 8px;
   width: 22px; height: 22px;
   border: none; background: none; cursor: pointer;
-  color: var(--faint);
+  color: var(--accent-blue);
   font-size: .85rem;
   border-radius: 4px;
   display: flex; align-items: center; justify-content: center;
@@ -236,7 +253,7 @@ body {
 /* ---------------------------------------------------------------------
    BOTÃO ADICIONAR (compartilhado)
    Botão de borda pontilhada para adicionar um novo insumo ou um novo
-   custo fixo. A cor varia conforme a etapa (azul ou violeta).
+   custo fixo.
 --------------------------------------------------------------------- */
 .btn-add {
   display: flex; align-items: center; justify-content: center; gap: 5px;
@@ -251,10 +268,10 @@ body {
   cursor: pointer;
   transition: border-color .15s, background .15s;
 }
-.btn-add--blue   { color: var(--step1); }
-.btn-add--blue:hover   { border-color: var(--step1); background: #EFF6FF; border-style: solid; }
-.btn-add--purple { color: var(--step2); }
-.btn-add--purple:hover { border-color: var(--step2); background: #F5F3FF; border-style: solid; }
+.btn-add--blue   { color: var(--primary); }
+.btn-add--blue:hover   { border-color: var(--primary); background: var(--primary-pale); border-style: solid; }
+.btn-add--purple { color: var(--primary-soft); }
+.btn-add--purple:hover { border-color: var(--primary-soft); background: #F5FCF8; border-style: solid; }
 
 /* Mensagem exibida quando uma lista dinâmica está vazia */
 .empty {
@@ -272,10 +289,10 @@ body {
 .insumos-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
 
 .insumo {
-  border: 1.5px solid var(--border-lt);
+  border: 1px solid var(--border);
   border-radius: var(--rs);
   padding: 14px 14px 12px;
-  background: #FAFBFD;
+  background: #FFFFFF;
   position: relative; /* necessário para posicionar o botão remover */
 }
 
@@ -305,10 +322,10 @@ body {
   font-family: var(--mono);
   font-size: .875rem;
   font-weight: 500;
-  color: var(--step1);
+  color: var(--primary);
   padding: 9px 11px;
-  background: #EFF6FF;
-  border: 1.5px solid #BFDBFE;
+  background: var(--primary-pale);
+  border: 1px solid #D8EEE4;
   border-radius: var(--rs);
   min-height: 38px;
   display: flex;
@@ -319,7 +336,7 @@ body {
 .total-insumos {
   margin-top: 14px;
   padding: 13px 16px;
-  background: var(--step1);
+  background: var(--primary);
   border-radius: var(--rs);
   display: flex;
   justify-content: space-between;
@@ -353,8 +370,8 @@ body {
   grid-template-columns: 1fr auto auto;
   gap: 8px;
   align-items: center;
-  background: #FAF8FF;
-  border: 1.5px solid var(--border-lt);
+  background: #FFFFFF;
+  border: 1px solid var(--border);
   border-radius: var(--rs);
   padding: 10px 36px 10px 12px; /* padding-right maior para caber o botão ✕ */
   position: relative;
@@ -366,9 +383,10 @@ body {
 /* Painel que mostra o total mensal somado — apenas informativo, não
    entra diretamente na fórmula de preço (ver script.js > calcular()) */
 .cf-total {
-  border: 1.5px solid #DDD6FE;
+  border: 1px solid #DDE7E3;
   border-radius: var(--rs);
   overflow: hidden;
+  background: #F8FCFA;
 }
 .cf-total__row {
   display: flex;
@@ -396,8 +414,8 @@ body {
 .rateio-preview {
   margin-top: 10px;
   padding: 10px 14px;
-  background: #F5F3FF;
-  border: 1.5px solid #DDD6FE;
+  background: #F1FBF7;
+  border: 1px solid #D8EEE4;
   border-radius: var(--rs);
 }
 .rateio-preview__row {
@@ -434,8 +452,9 @@ body {
 
 .result {
   padding: 13px 15px;
-  background: #FAFBFD;
+  background: #FFFFFF;
   border-radius: var(--rs);
+  border: 1px solid var(--border);
   border-left: 4px solid;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -483,10 +502,10 @@ body {
   gap: 12px;
 }
 .scenario {
-  border: 1.5px solid var(--border-lt);
+  border: 1px solid var(--border);
   border-radius: var(--rs);
   padding: 12px;
-  background: #FAFBFD;
+  background: #FFFFFF;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -534,8 +553,8 @@ body {
   font-size: .7rem;
   color: var(--faint);
 }
-.footer a { color: var(--faint); text-decoration: none; }
-.footer a:hover { color: var(--step1); }
+.footer a { color: var(--accent-blue); text-decoration: none; }
+.footer a:hover { color: var(--primary); }
 
 /* ---------------------------------------------------------------------
    MODO CONFEITARIA / PADARIA — TOGGLE
@@ -545,15 +564,15 @@ body {
 .mode-toggle {
   margin-top: 12px;
   padding: 10px 12px;
-  border: 1.5px dashed var(--border);
+  border: 1px dashed var(--border);
   border-radius: var(--rs);
-  background: #FAFBFD;
+  background: #F8FCFA;
   transition: border-color .15s, background .15s;
 }
 .mode-toggle:has(input:checked) {
-  border-color: var(--step1);
+  border-color: var(--primary);
   border-style: solid;
-  background: #EFF6FF;
+  background: var(--primary-pale);
 }
 .mode-toggle__label {
   display: flex;
@@ -635,8 +654,8 @@ body {
   display: none;
   margin-top: 8px;
   padding: 10px 14px;
-  background: #EFF6FF;
-  border: 1.5px solid #BFDBFE;
+  background: var(--primary-pale);
+  border: 1px solid #D8EEE4;
   border-radius: var(--rs);
 }
 .confeitaria-unidade__row {
@@ -674,9 +693,9 @@ body {
 --------------------------------------------------------------------- */
 .card__help {
   margin-bottom: 16px;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border);
   border-radius: var(--rs);
-  background: #FAFBFD;
+  background: #F8FCFA;
   padding: 0;
 }
 .card__help summary {
@@ -689,13 +708,14 @@ body {
   padding: 10px 12px;
   font-size: .82rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--accent-blue);
   user-select: none;
 }
 .card__help summary::-webkit-details-marker { display: none; }
 .card__help summary::after {
   content: '❯';
   margin-left: auto;
+  color: var(--accent-gold);
   transition: transform .2s ease;
 }
 .card__help[open] summary::after { transform: rotate(90deg); }
@@ -739,7 +759,7 @@ body {
 }
 
 .btn-save {
-  background: var(--step1);
+  background: var(--primary);
   color: #fff;
   border: none;
   border-radius: var(--rs);
@@ -753,7 +773,8 @@ body {
 }
 
 .btn-save:hover {
-  filter: brightness(1.08);
+  background: var(--primary-hover);
+  filter: none;
 }
 
 .btn-save:active {
@@ -796,7 +817,7 @@ body {
 
 .produto-card {
   background: var(--surface);
-  border: 1px solid var(--border-lt);
+  border: 1px solid var(--border);
   border-radius: var(--r);
   box-shadow: var(--shadow);
   padding: 22px;
@@ -819,7 +840,7 @@ body {
 
 .produto-card {
   background: var(--surface);
-  border: 1px solid var(--border-lt);
+  border: 1px solid var(--border);
   border-radius: var(--r);
   box-shadow: var(--shadow);
   padding: 16px;
@@ -882,12 +903,13 @@ body {
 }
 
 .btn-card--edit {
-  background: var(--step1);
+  background: var(--primary);
   color: #fff;
 }
 
 .btn-card--del {
-  background: #FEE2E2;
+  background: #FFFFFF;
+  border: 1px solid #FCA5A5;
   color: var(--c-danger);
 }
 
