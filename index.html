@@ -34,7 +34,7 @@
 
         <details class="card__help">
           <summary>Ajuda</summary>
-          <div class="help-text">Informe o nome do produto e os insumos utilizados na produção. Para cada insumo, preencha o valor pago e as quantidades comprada e utilizada — o custo de cada um será calculado automaticamente.</div>
+          <div class="help-text">Informe o nome do produto e os insumos, ingredientes ou outros itens utilizados na produção. Para cada item, preencha o valor pago e as quantidades comprada e utilizada — o custo de cada um será calculado automaticamente.</div>
         </details>
 
         <!-- Nome do produto (separado dos insumos) -->
@@ -42,18 +42,6 @@
           <label class="lbl" for="nome-produto">Nome do produto</label>
           <input class="inp" type="text" id="nome-produto" placeholder="Ex: Bolo de chocolate" oninput="onNomeProdutoChange(this.value)" />
         </div>
-
-        <!-- Toggle: Modo Confeitaria / Padaria
-             Quando ativo os rótulos dos campos de insumo seguem a nomenclatura
-             de receita (ingrediente, qtde total, qtde na receita) e o campo de
-             rendimento aparece para calcular o custo unitário a partir do lote. -->
-        <div class="mode-toggle">
-          <label class="mode-toggle__label">
-            <input type="checkbox" id="modo-confeitaria" onchange="onModoConfeitariaChange()" />
-            <span class="mode-toggle__txt">Modo Confeitaria / Padaria</span>
-          </label>
-          <p class="hint">Ative para usar a nomenclatura de receita e calcular o custo por unidade produzida.</p>
-        </div> <br>
 
         <!-- Mão de obra: custo direto por unidade produzida ATT --> 
         <p class="section-lbl">Mão de obra</p>
@@ -101,21 +89,19 @@
 
         <div class="divider"></div>
 
-        <p class="section-lbl" id="insumos-section-lbl">Insumos utilizados</p>
+        <p class="section-lbl" id="insumos-section-lbl">Insumos, ingredientes ou outros</p>
 
         <div id="insumos-list" class="insumos-list"></div>
         <p id="empty-insumo" class="empty">Nenhum insumo adicionado ainda.</p>
 
         <button class="btn-add btn-add--blue" onclick="addInsumo()">+ Adicionar insumo</button>
 
-        <!-- Rendimento da receita — oculto por padrão, exibido no Modo Confeitaria -->
-        <div class="confeitaria-bloco" id="confeitaria-bloco">
+        <div class="rendimento-bloco" id="rendimento-bloco">
           <div class="field">
-            <label class="lbl" for="rendimento">Rendimento da receita (unidades)</label>
+            <label class="lbl" for="rendimento">Quantas unidades rende</label>
             <input class="inp" type="number" id="rendimento" placeholder="Ex: 50" min="1" step="1" value="1" />
-            <p class="hint">Quantas unidades essa receita produz ao todo.</p>
+            <p class="hint">Quantas unidades esse lote produz ao todo.</p>
 
-            <!-- Aviso exibido quando o rendimento é zero ou não preenchido -->
             <p class="insumo__warn" id="warn-rendimento" style="display:none">⚠ O rendimento deve ser maior que zero para calcular o custo por unidade.</p>
           </div>
         </div>
@@ -125,13 +111,12 @@
           <span class="total-insumos__val" id="total-insumos">R$ 0,00</span>
         </div>
 
-        <!-- Custo por unidade — oculto por padrão, exibido no Modo Confeitaria -->
-        <div class="confeitaria-unidade" id="confeitaria-unidade">
-          <div class="confeitaria-unidade__row">
-            <span class="confeitaria-unidade__lbl">Custo por unidade</span>
-            <span class="confeitaria-unidade__val" id="custo-por-unidade">R$ 0,00</span>
+        <div class="custo-unidade" id="custo-unidade">
+          <div class="custo-unidade__row">
+            <span class="custo-unidade__lbl">Custo por unidade</span>
+            <span class="custo-unidade__val" id="custo-por-unidade">R$ 0,00</span>
           </div>
-          <div class="confeitaria-unidade__formula" id="custo-por-unidade-formula">R$ 0,00 ÷ 1 un.</div>
+          <div class="custo-unidade__formula" id="custo-por-unidade-formula">R$ 0,00 ÷ 1 un.</div>
         </div>
 
       </div>
@@ -241,7 +226,7 @@
             <div class="result__sub" id="r-minimo-sub">Custo + impostos (0%)</div>
           </div>
 
-          <div class="result result--ideal-unidade" id="confeitaria-preco-ideal-unidade" style="display:none;">
+          <div class="result result--ideal-unidade" id="preco-ideal-unidade">
             <div class="result__lbl">Preço de Venda da Unidade</div>
             <div class="result__val" id="r-ideal-unidade">R$ 0,00</div>
             <div class="result__sub" id="r-ideal-unidade-formula">Custo unitário: R$ 0,00</div>
@@ -496,34 +481,16 @@ function resetarDadosEtapa2Extras() {
   document.getElementById('comissionamento').value = 0;
 }
 
-/**
- * Ativado ao ligar/desligar o Modo Confeitaria / Padaria.
- * Controla a visibilidade dos campos de rendimento e custo por unidade,
- * atualiza os rótulos da seção e do total, re-renderiza os insumos
- * para que os labels dos campos reflitam o modo ativo, e re-valida
- * os insumos existentes de acordo com as regras do novo modo.
- */
-function onModoConfeitariaChange() {
-  const ativo   = document.getElementById('modo-confeitaria').checked;
-  const bloco   = document.getElementById('confeitaria-bloco');
-  const unidade = document.getElementById('confeitaria-unidade');
-  const lbl     = document.getElementById('total-insumos-lbl');
-  const secLbl  = document.getElementById('insumos-section-lbl');
-  const tempoInput = document.getElementById('tempo-trabalhado');
+function atualizarBlocosEtapa1() {
+  const lbl = document.getElementById('total-insumos-lbl');
+  if (lbl) {
+    lbl.textContent = 'Custo total do lote';
+  }
 
-  bloco.style.display   = ativo ? 'block' : 'none';
-  unidade.style.display = ativo ? 'block' : 'none';
-  lbl.textContent       = ativo ? 'Custo total do lote' : 'Custo total dos insumos';
-  secLbl.textContent    = ativo ? 'Ingredientes da Receita e Outros' : 'Insumos utilizados';
-
-  /* Re-renderiza os insumos para aplicar os rótulos do modo ativo */
   renderInsumos();
-  
-  /* Re-valida todos os insumos com as regras do novo modo */
   insumos.forEach(ins => {
     revalidarInsumo(ins.id);
   });
-  
   calcular();
 }
 
@@ -567,7 +534,7 @@ function rmInsumo(id) {
  *
  * Validações aplicadas:
  *   - Quantidade Total (comprada) não pode ser zero para evitar divisão por zero
- *   - No Modo Confeitaria: Quantidade na Receita não pode superar Quantidade Total
+ *   - Quantidade utilizada não pode superar a quantidade comprada
  *
  * @param {number} id - id do insumo sendo editado
  * @param {string} campo - 'nome' | 'vTotal' | 'qtdAdq' | 'qtdUsa'
@@ -587,8 +554,8 @@ function upInsumo(id, campo, valor) {
  * Re-valida um insumo existente: atualiza a mensagem de erro (se houver),
  * recalcula o custo e atualiza o display.
  * Chamada por upInsumo() quando o usuário edita um campo, ou por
- * onModoConfeitariaChange() para re-validar todos os insumos quando o
- * modo Confeitaria é ativado/desativado.
+ * atualizarBlocosEtapa1() para re-validar todos os insumos quando o layout
+ * da Etapa 1 é re-renderizado.
  *
  * @param {number} id - id do insumo a re-validar
  */
@@ -631,27 +598,23 @@ function revalidarInsumo(id) {
 
 /**
  * Re-renderiza a lista completa de insumos no DOM.
- * Só é chamada quando um insumo é adicionado, removido ou quando o modo
- * confeitaria é ativado/desativado (pois os rótulos mudam).
+ * Só é chamada quando um insumo é adicionado ou removido.
  * Edições de campo numéricas/texto usam upInsumo() para evitar perda de foco.
  *
  * Layout: Nome do insumo em linha full-width, seguido de grid 2×2:
  *   [Valor pago]  [Qtd. comprada ]
  *   [Qtd. usada]  [Custo calculado]
- * No Modo Confeitaria os rótulos das colunas mudam para a nomenclatura de receita.
  */
 function renderInsumos() {
   const list  = document.getElementById('insumos-list');
   const empty = document.getElementById('empty-insumo');
-  const modo  = document.getElementById('modo-confeitaria').checked;
 
-  /* Rótulos adaptativos: modo padrão vs. Confeitaria / Padaria */
-  const lblNome = modo ? 'Nome do Ingrediente ou Outros' : 'Nome do insumo';
+  const lblNome = 'Nome do item';
   const lblVlr  = 'Valor pago (R$)';
-  const lblAdq  = modo ? 'Qtde total (g/ml)'          : 'Qtd. comprada (g/ml)';
-  const lblUsa  = modo ? 'Qtde na receita (g/ml)'     : 'Qtd. usada (g/ml)';
-  const phAdq   = modo ? 'Ex: 500'                    : 'Ex: 500';
-  const phUsa   = modo ? 'Ex: 100'                    : 'Ex: 100';
+  const lblAdq  = 'Qtd. comprada (g/ml)';
+  const lblUsa  = 'Qtd. usada (g/ml)';
+  const phAdq   = 'Ex: 500';
+  const phUsa   = 'Ex: 100';
 
   /* Mostra a mensagem de "lista vazia" só quando não há insumos */
   empty.style.display = insumos.length === 0 ? 'block' : 'none';
@@ -712,7 +675,7 @@ function renderInsumos() {
 
         </div>
 
-        <!-- Aviso de validação — exibido via JS quando qtdUsa > qtdAdq no Modo Confeitaria -->
+        <!-- Aviso de validação — exibido via JS quando qtdUsa > qtdAdq -->
         <p class="insumo__warn" id="warn-${ins.id}" style="display:none"></p>
 
     </div>
@@ -847,8 +810,7 @@ function formatarPercentuaisAdicionais(percentuais) {
  */
 function calcular() {
   /* --- Leitura dos campos simples --- */
-  const modoConfeitaria = document.getElementById('modo-confeitaria').checked;
-  const maoObraManual = modoConfeitaria ? 0 : parseNum(document.getElementById('mao-obra').value);
+  const maoObraManual = 0;
   const valorHora     = parseNum(document.getElementById('valor-hora').value);
   const tempoInput = document.getElementById('tempo-trabalhado');
   const tempoTrabalhado = tempoInput ? tempoInput.value : '';
@@ -862,22 +824,15 @@ function calcular() {
   const margem1       = parseNum(document.getElementById('margem1').value);
   const margem2       = parseNum(document.getElementById('margem2').value);
 
-  /* --- Modo Confeitaria / Padaria ---
-     Quando ativo, o custo total dos insumos representa o lote inteiro.
-     O campo "rendimento" divide esse custo pelo número de unidades produzidas,
-     obtendo o custo de insumos por unidade. Em modo padrão, rendimento = 1.
-     
-     Validação: o rendimento nunca pode ser menor que 1 para evitar
-     divisão por zero e cálculos inválidos (NaN/Infinity). */
+  /* --- Rendimento ---
+     O campo de rendimento divide o custo total do lote pelo número de unidades
+     produzidas, gerando o custo por unidade. */
   const rendimentoInput = parseNum(document.getElementById('rendimento').value);
-  const rendimento      = modoConfeitaria
-    ? Math.max(1, rendimentoInput || 1)
-    : 1;
+  const rendimento      = Math.max(1, rendimentoInput || 1);
 
-  /* Exibe aviso quando o rendimento é zero ou vazio no Modo Confeitaria */
   const warnRend = document.getElementById('warn-rendimento');
   if (warnRend) {
-    warnRend.style.display = (modoConfeitaria && rendimentoInput <= 0) ? 'block' : 'none';
+    warnRend.style.display = rendimentoInput <= 0 ? 'block' : 'none';
   }
 
   /* --- Etapa 1: soma de todos os insumos (custo total do lote ou por unidade) --- */
@@ -908,11 +863,9 @@ function calcular() {
   const lucro2       = precoIdeal2 - precoCusto;
   const lucroRel2     = precoIdeal2 > 0 ? (lucro2 / precoIdeal2) * 100 : 0;
 
-  /* --- Novo resultado exclusivo do Modo Confeitaria --- */
-  const precoIdealUnidade = modoConfeitaria && rendimento > 0 ? precoIdeal1 / rendimento : 0;
-  const blocoPrecoIdealUnidade = document.getElementById('confeitaria-preco-ideal-unidade');
+  const blocoPrecoIdealUnidade = document.getElementById('preco-ideal-unidade');
   if (blocoPrecoIdealUnidade) {
-    blocoPrecoIdealUnidade.style.display = modoConfeitaria ? 'block' : 'none';
+    blocoPrecoIdealUnidade.style.display = 'block';
   }
 
   /* --- Atualiza os displays da Etapa 1 --- */
@@ -922,12 +875,9 @@ function calcular() {
     maoObraCalcEl.textContent = `Mão de obra calculada: ${brl(maoObraCalc)}`;
   }
 
-  /* No Modo Confeitaria, exibe também o custo dividido por unidade */
-  if (modoConfeitaria) {
-    set('custo-por-unidade', brl(insumosUnitario));
-    document.getElementById('custo-por-unidade-formula').textContent =
-      `${brl(totalInsumos)} ÷ ${rendimento} un.`;
-  }
+  set('custo-por-unidade', brl(insumosUnitario));
+  document.getElementById('custo-por-unidade-formula').textContent =
+    `${brl(totalInsumos)} ÷ ${rendimento} un.`;
 
   /* --- Atualiza os displays da Etapa 2 --- */
   set('cf-mensal',    brl(totalCFMens));
@@ -947,19 +897,19 @@ function calcular() {
     `${lucroRel1.toFixed(1)}% sobre o preço ideal`;
 
   const margemUnidade = parseNum(document.getElementById('margem-unidade').value);
-  const precoMinimoPorUnidade = modoConfeitaria && rendimento > 0 ? precoMinimo / rendimento : 0;
-  const precoIdealUnidadeMargem = modoConfeitaria && rendimento > 0 ? precoMinimoPorUnidade * (1 + margemUnidade / 100) : 0;
-  const lucroPorUnidade = modoConfeitaria && rendimento > 0 ? precoIdealUnidadeMargem - precoMinimoPorUnidade : 0;
+  const precoMinimoPorUnidade = rendimento > 0 ? precoMinimo / rendimento : 0;
+  const precoIdealUnidadeMargem = rendimento > 0 ? precoMinimoPorUnidade * (1 + margemUnidade / 100) : 0;
+  const lucroPorUnidade = rendimento > 0 ? precoIdealUnidadeMargem - precoMinimoPorUnidade : 0;
   set('r-ideal-unidade', brl(precoIdealUnidadeMargem));
   const formulaIdealUnidade = document.getElementById('r-ideal-unidade-formula');
   const detalhesIdealUnidade = document.getElementById('r-ideal-unidade-detalhes');
   if (formulaIdealUnidade) {
-    formulaIdealUnidade.textContent = modoConfeitaria && rendimento > 0
+    formulaIdealUnidade.textContent = rendimento > 0
       ? `Custo unitário: ${brl(precoMinimoPorUnidade)}`
       : 'Informe um rendimento válido';
   }
   if (detalhesIdealUnidade) {
-    detalhesIdealUnidade.textContent = modoConfeitaria && rendimento > 0
+    detalhesIdealUnidade.textContent = rendimento > 0
       ? `Margem aplicada: ${margemUnidade.toFixed(1)}% · Lucro por unidade: ${brl(lucroPorUnidade)}`
       : 'Margem aplicada: 0,0% · Lucro por unidade: R$ 0,00';
   }
@@ -1070,7 +1020,6 @@ function coletarDadosProduto() {
   return {
     id: produtoEmEdicaoId || ('p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8)),
     nomeProduto: document.getElementById('nome-produto').value,
-    modoConfeitaria: document.getElementById('modo-confeitaria').checked,
     maoObra: document.getElementById('mao-obra').value,
     valorHora: document.getElementById('valor-hora').value,
     tempoTrabalhado: document.getElementById('tempo-trabalhado').value,
@@ -1098,7 +1047,6 @@ function aplicarDadosProduto(p) {
   document.getElementById('nome-produto').value = p.nomeProduto || '';
   onNomeProdutoChange(p.nomeProduto || '');
 
-  document.getElementById('modo-confeitaria').checked = !!p.modoConfeitaria;
   document.getElementById('mao-obra').value = p.maoObra || '';
   document.getElementById('valor-hora').value = p.valorHora || '';
   document.getElementById('tempo-trabalhado').value = p.tempoTrabalhado || '';
@@ -1116,8 +1064,7 @@ function aplicarDadosProduto(p) {
   document.getElementById('margem1').value = p.margem1 ?? 30;
   document.getElementById('margem2').value = p.margem2 ?? 50;
 
-  /* Atualiza visibilidade dos blocos do Modo Confeitaria */
-  onModoConfeitariaChange();
+  atualizarBlocosEtapa1();
 
   renderInsumos();
   renderCustosFixos();
@@ -1155,7 +1102,6 @@ function limparFormulario() {
   document.getElementById('nome-produto').value = '';
   onNomeProdutoChange('');
 
-  document.getElementById('modo-confeitaria').checked = false;
   document.getElementById('mao-obra').value = '';
   document.getElementById('valor-hora').value = '';
   document.getElementById('tempo-trabalhado').value = '';
@@ -1172,7 +1118,7 @@ function limparFormulario() {
   document.getElementById('margem1').value = 30;
   document.getElementById('margem2').value = 50;
 
-  onModoConfeitariaChange();
+  atualizarBlocosEtapa1();
 
   addInsumo();
   addCustoFixo();
@@ -1236,13 +1182,13 @@ function renderProdutosSalvos() {
 
   const custoUnit = p => {
     const totalInsumos = (p.insumos || []).reduce((s, i) => s + (i.custo || 0), 0);
-    const rendimento = p.modoConfeitaria ? Math.max(1, parseNum(p.rendimento) || 1) : 1;
+    const rendimento = Math.max(1, parseNum(p.rendimento) || 1);
     return (totalInsumos / rendimento) + maoObraTotal(p);
   };
 
   const precoIdeal = p => {
     const totalInsumos = (p.insumos || []).reduce((s, i) => s + (i.custo || 0), 0);
-    const rendimento = p.modoConfeitaria ? Math.max(1, parseNum(p.rendimento) || 1) : 1;
+    const rendimento = Math.max(1, parseNum(p.rendimento) || 1);
     const insumosUnit = totalInsumos / rendimento;
     const baseCusto = insumosUnit + maoObraTotal(p);
     const totalCF = (p.custosFixos || []).reduce((s, c) => s + (c.valor || 0), 0);

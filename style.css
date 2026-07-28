@@ -579,44 +579,14 @@ body {
 .footer a:hover { color: var(--primary); }
 
 /* ---------------------------------------------------------------------
-   MODO CONFEITARIA / PADARIA — TOGGLE
-   Checkbox que ativa o modo de receita. A borda muda para azul e o
-   fundo fica levemente azulado quando o modo está ligado.
+   ETAPA 1 — RENDIMENTO
+   Bloco padrão exibido sempre para calcular o custo por unidade com base
+   no rendimento do lote.
 --------------------------------------------------------------------- */
-.mode-toggle {
-  margin-top: 12px;
-  padding: 10px 12px;
-  border: 1px dashed var(--border);
-  border-radius: var(--rs);
-  background: #F8FCFA;
-  transition: border-color .15s, background .15s;
+.rendimento-bloco {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
-.mode-toggle:has(input:checked) {
-  border-color: var(--primary);
-  border-style: solid;
-  background: var(--primary-pale);
-}
-.mode-toggle__label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-}
-.mode-toggle__label input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
-  accent-color: var(--step1);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.mode-toggle__txt {
-  font-size: .82rem;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -.01em;
-}
-.mode-toggle .hint { margin-top: 5px; padding-left: 23px; }
-
 
 /* ---------------------------------------------------------------------
    INSUMO — NOME (linha própria, full-width acima do grid)
@@ -658,34 +628,23 @@ body {
 
 
 /* ---------------------------------------------------------------------
-   MODO CONFEITARIA — RENDIMENTO (confeitaria-bloco)
-   Oculto por padrão; exibido via JS quando o modo confeitaria é ativado.
+   CUSTO POR UNIDADE
+   Faixa exibida abaixo do total de insumos, mostrando o custo dividido
+   pelo rendimento do lote.
 --------------------------------------------------------------------- */
-.confeitaria-bloco {
-  display: none;
-  margin-bottom: 10px;
-}
-
-
-/* ---------------------------------------------------------------------
-   MODO CONFEITARIA — CUSTO POR UNIDADE (confeitaria-unidade)
-   Faixa exibida abaixo da barra azul de total, mostrando o custo
-   dividido pelo rendimento. Oculta por padrão; exibida via JS.
---------------------------------------------------------------------- */
-.confeitaria-unidade {
-  display: none;
+.custo-unidade {
   margin-top: 8px;
   padding: 10px 14px;
   background: var(--primary-pale);
   border: 1px solid #D8EEE4;
   border-radius: var(--rs);
 }
-.confeitaria-unidade__row {
+.custo-unidade__row {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
-.confeitaria-unidade__lbl {
+.custo-unidade__lbl {
   font-size: .7rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -693,13 +652,13 @@ body {
   color: var(--step1);
   opacity: .85;
 }
-.confeitaria-unidade__val {
+.custo-unidade__val {
   font-family: var(--mono);
   font-size: 1rem;
   font-weight: 500;
   color: var(--step1);
 }
-.confeitaria-unidade__formula {
+.custo-unidade__formula {
   margin-top: 3px;
   font-size: .7rem;
   color: var(--step1);
@@ -750,8 +709,8 @@ body {
 
 /* ---------------------------------------------------------------------
    AVISO DE VALIDAÇÃO DOS INSUMOS (insumo__warn)
-   Mensagem amigável exibida quando há erro de preenchimento no Modo
-   Confeitaria (ex: qtde na receita > qtde total, rendimento = 0).
+   Mensagem amigável exibida quando há erro de preenchimento no
+   rendimento ou na relação entre quantidade comprada e utilizada.
    Oculta por padrão; controlada via JS em upInsumo() e calcular().
 --------------------------------------------------------------------- */
 .insumo__warn {
