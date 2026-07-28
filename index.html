@@ -196,6 +196,24 @@
           <input class="inp" type="number" id="impostos" placeholder="0" min="0" max="100" step="0.1" />
         </div>
 
+        <div class="divider"></div>
+
+        <!-- Taxas de cartão -->
+        <p class="section-lbl">Taxas de cartão</p>
+        <div class="field">
+          <label class="lbl" for="taxas-cartao">Taxa (%)</label>
+          <input class="inp" type="number" id="taxas-cartao" placeholder="0" min="0" max="100" step="0.01" value="0" />
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Comissionamento -->
+        <p class="section-lbl">Comissionamento</p>
+        <div class="field">
+          <label class="lbl" for="comissionamento">Comissão (%)</label>
+          <input class="inp" type="number" id="comissionamento" placeholder="0" min="0" max="100" step="0.01" value="0" />
+        </div>
+
       </div>
     </section>
 
@@ -458,6 +476,24 @@ function onNomeProdutoChange(valor) {
   } else {
     el.style.display = 'none';
   }
+}
+
+function obterDadosEtapa2Extras() {
+  return {
+    taxasCartao: document.getElementById('taxas-cartao').value,
+    comissionamento: document.getElementById('comissionamento').value
+  };
+}
+
+function aplicarDadosEtapa2Extras(dados) {
+  const valores = dados || {};
+  document.getElementById('taxas-cartao').value = valores.taxasCartao ?? 0;
+  document.getElementById('comissionamento').value = valores.comissionamento ?? 0;
+}
+
+function resetarDadosEtapa2Extras() {
+  document.getElementById('taxas-cartao').value = 0;
+  document.getElementById('comissionamento').value = 0;
 }
 
 /**
@@ -777,6 +813,22 @@ function calcularMaoObraPorHora(valorHora, tempoTrabalhado) {
   return valor * horas;
 }
 
+function obterPercentuaisAdicionais() {
+  return {
+    imposto: parseNum(document.getElementById('impostos').value),
+    taxasCartao: parseNum(document.getElementById('taxas-cartao').value),
+    comissionamento: parseNum(document.getElementById('comissionamento').value)
+  };
+}
+
+function formatarPercentuaisAdicionais(percentuais) {
+  const partes = [];
+  if (percentuais.imposto > 0) partes.push(`${percentuais.imposto.toFixed(percentuais.imposto % 1 === 0 ? 0 : 2).replace('.', ',')}%`);
+  if (percentuais.taxasCartao > 0) partes.push(`${percentuais.taxasCartao.toFixed(percentuais.taxasCartao % 1 === 0 ? 0 : 2).replace('.', ',')}%`);
+  if (percentuais.comissionamento > 0) partes.push(`${percentuais.comissionamento.toFixed(percentuais.comissionamento % 1 === 0 ? 0 : 2).replace('.', ',')}%`);
+  return partes.length ? partes.join(' + ') : '0%';
+}
+
 /**
  * Recalcula todos os valores derivados (totais, preços e lucros) e
  * atualiza todos os elementos de resultado na tela.
@@ -803,7 +855,10 @@ function calcular() {
   const maoObraCalc   = calcularMaoObraPorHora(valorHora, tempoTrabalhado);
   const maoObra       = maoObraManual + maoObraCalc;
   const rateioPct     = parseNum(document.getElementById('rateio-pct').value);
-  const imposto       = parseNum(document.getElementById('impostos').value);
+  const percentuaisAdicionais = obterPercentuaisAdicionais();
+  const imposto       = percentuaisAdicionais.imposto;
+  const taxasCartao   = percentuaisAdicionais.taxasCartao;
+  const comissionamento = percentuaisAdicionais.comissionamento;
   const margem1       = parseNum(document.getElementById('margem1').value);
   const margem2       = parseNum(document.getElementById('margem2').value);
 
@@ -840,7 +895,8 @@ function calcular() {
 
   /* --- Preços finais --- */
   const precoCusto  = baseCusto + rateioValor;
-  const precoMinimo = precoCusto * (1 + imposto / 100);
+  const percentualTotal = imposto + taxasCartao + comissionamento;
+  const precoMinimo = precoCusto * (1 + percentualTotal / 100);
 
   /* --- Cenário 1 de margem de lucro --- */
   const precoIdeal1 = precoMinimo * (1 + margem1 / 100);
@@ -883,7 +939,7 @@ function calcular() {
   set('r-custo',  brl(precoCusto));
   set('r-minimo', brl(precoMinimo));
   document.getElementById('r-minimo-sub').textContent =
-    `Custo + impostos (${imposto}%)`;
+    `Custo + imposto + taxa + comissão (${formatarPercentuaisAdicionais(percentuaisAdicionais)})`;
 
   set('r-ideal-1', brl(precoIdeal1));
   set('r-lucro-1', brl(lucro1));
@@ -921,16 +977,12 @@ function calcular() {
    rateio, impostos e as duas margens) recalculam tudo a cada
    alteração, em tempo real.
 ========================================================= */
-['mao-obra', 'valor-hora', 'tempo-trabalhado', 'rateio-pct', 'impostos', 'margem1', 'margem2', 'rendimento', 'margem-unidade'].forEach(id => {
+['mao-obra', 'valor-hora', 'tempo-trabalhado', 'rateio-pct', 'impostos', 'taxas-cartao', 'comissionamento', 'margem1', 'margem2', 'rendimento', 'margem-unidade'].forEach(id => {
   const el = document.getElementById(id);
   if (!el) return;
 
   el.addEventListener('input', () => {
-    if (id === 'mao-obra') {
-      sanitizarCampoNumerico(el, /[^0-9,.-]/g);
-    }
-
-    if (id === 'valor-hora') {
+    if (id === 'mao-obra' || id === 'valor-hora' || id === 'taxas-cartao' || id === 'comissionamento') {
       sanitizarCampoNumerico(el, /[^0-9,.-]/g);
     }
 
@@ -1027,6 +1079,8 @@ function coletarDadosProduto() {
     custosFixos: JSON.parse(JSON.stringify(custosFixos)),
     rateioPct: document.getElementById('rateio-pct').value,
     impostos: document.getElementById('impostos').value,
+    taxasCartao: document.getElementById('taxas-cartao').value,
+    comissionamento: document.getElementById('comissionamento').value,
     margem1: document.getElementById('margem1').value,
     margem2: document.getElementById('margem2').value,
     criadoEm: produtoEmEdicaoId ? (ProdutoStorage.obterPorId(produtoEmEdicaoId)?.criadoEm || new Date().toISOString()) : new Date().toISOString(),
@@ -1058,6 +1112,7 @@ function aplicarDadosProduto(p) {
 
   document.getElementById('rateio-pct').value = p.rateioPct ?? 5;
   document.getElementById('impostos').value = p.impostos || '';
+  aplicarDadosEtapa2Extras(p);
   document.getElementById('margem1').value = p.margem1 ?? 30;
   document.getElementById('margem2').value = p.margem2 ?? 50;
 
@@ -1113,6 +1168,7 @@ function limparFormulario() {
 
   document.getElementById('rateio-pct').value = 5;
   document.getElementById('impostos').value = '';
+  resetarDadosEtapa2Extras();
   document.getElementById('margem1').value = 30;
   document.getElementById('margem2').value = 50;
 
@@ -1192,7 +1248,8 @@ function renderProdutosSalvos() {
     const totalCF = (p.custosFixos || []).reduce((s, c) => s + (c.valor || 0), 0);
     const rateioValor = totalCF * (parseNum(p.rateioPct) / 100);
     const precoCusto = baseCusto + rateioValor;
-    const precoMinimo = precoCusto * (1 + parseNum(p.impostos) / 100);
+    const percentualTotal = parseNum(p.impostos) + parseNum(p.taxasCartao) + parseNum(p.comissionamento);
+    const precoMinimo = precoCusto * (1 + percentualTotal / 100);
     return precoMinimo * (1 + parseNum(p.margem1) / 100);
   };
 
