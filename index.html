@@ -44,7 +44,7 @@
         </div>
 
         <!-- Mão de obra: custo direto por unidade produzida ATT --> 
-        <p class="section-lbl">Mão de obra</p>
+        <p class="section-lbl section-lbl--labor">Mão de obra</p>
         <div class="field" id="mao-obra-wrapper" style="display:none;">
           <label class="lbl" for="mao-obra">Valor por unidade (R$)</label>
           <input
@@ -58,10 +58,24 @@
           />
         </div>
 
-        <div class="labor-calc">
-          <p class="section-lbl section-lbl--sub">Cálculo da Mão de Obra</p>
+        <div
+          class="labor-assistant"
+          role="button"
+          tabindex="0"
+          onclick="abrirAssistenteMaoObra()"
+          onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirAssistenteMaoObra(); }"
+        >
+          <div class="labor-assistant__icon">🧮</div>
+          <div class="labor-assistant__content">
+            <div class="labor-assistant__title">Assistente de cálculo</div>
+            <div class="labor-assistant__desc">Descubra quanto vale sua hora</div>
+          </div>
+          <div class="labor-assistant__chevron">›</div>
+        </div>
+
+        <div class="labor-calc labor-calc--compact">
           <div class="field">
-            <label class="lbl" for="valor-hora">Valor da Hora (R$)</label>
+            <label class="lbl" for="valor-hora">Valor da hora (R$)</label>
             <input
               class="inp"
               type="text"
@@ -72,7 +86,7 @@
             />
           </div>
           <div class="field">
-            <label class="lbl" for="tempo-trabalhado">Tempo Trabalhado</label>
+            <label class="lbl" for="tempo-trabalhado">Tempo trabalhado</label>
             <input
               class="inp"
               type="text"
@@ -314,6 +328,53 @@
     <p>Desenvolvido por <a href="https://github.com/luisnunes" target="_blank" rel="noopener noreferrer">Luis Nunes</a></p>
   </footer>
 
+  <div class="assistente-modal" id="assistente-mao-obra" aria-hidden="true">
+    <div class="assistente-modal__backdrop" onclick="fecharAssistenteMaoObra()"></div>
+    <div class="assistente-modal__panel" role="dialog" aria-modal="true" aria-labelledby="assistente-titulo">
+      <div class="assistente-modal__header">
+        <div>
+          <div class="assistente-modal__eyebrow">Assistente</div>
+          <h3 class="assistente-modal__title" id="assistente-titulo">Quanto vale sua hora</h3>
+        </div>
+        <button class="assistente-modal__close" type="button" onclick="fecharAssistenteMaoObra()" aria-label="Fechar assistente">✕</button>
+      </div>
+
+      <div class="assistente-modal__body">
+        <p class="assistente-modal__copy">Descubra automaticamente quanto vale sua hora de trabalho com base na sua meta salarial e nas horas realmente produtivas.</p>
+
+        <div class="field">
+          <label class="lbl" for="assistente-salario">Salário mensal desejado (R$)</label>
+          <input class="inp" type="text" id="assistente-salario" placeholder="0,00" inputmode="decimal" oninput="this.value = this.value.replace(/[^0-9,.-]/g, ''); atualizarVisaoAssistente();" />
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="assistente-dias">Dias trabalhados no mês</label>
+          <input class="inp" type="text" id="assistente-dias" placeholder="22" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, ''); atualizarVisaoAssistente();" />
+        </div>
+
+        <div class="field">
+          <label class="lbl" for="assistente-horas-dia">Horas produtivas por dia</label>
+          <input class="inp" type="text" id="assistente-horas-dia" placeholder="8" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, ''); atualizarVisaoAssistente();" />
+        </div>
+
+        <div class="assistente-modal__summary">
+          <span class="assistente-modal__summary-label">Horas produtivas no mês</span>
+          <div class="assistente-modal__summary-value" id="assistente-horas-mes">22 × 8 = 176 horas</div>
+        </div>
+
+        <div class="assistente-modal__result-card">
+          <div class="assistente-modal__result-label">Valor da sua hora</div>
+          <div class="assistente-modal__result-value" id="assistente-valor-hora" data-valor-hora="0">R$ 0,00/h</div>
+        </div>
+      </div>
+
+      <div class="assistente-modal__footer">
+        <button class="btn btn--ghost" type="button" onclick="fecharAssistenteMaoObra()">Cancelar</button>
+        <button class="btn btn--primary" type="button" onclick="aplicarDadosAssistente()">Aplicar cálculo</button>
+      </div>
+    </div>
+  </div>
+
   <script>
 /* =====================================================================
    CALCULADORA DE PRECIFICAÇÃO — LÓGICA DA APLICAÇÃO
@@ -492,6 +553,95 @@ function atualizarBlocosEtapa1() {
     revalidarInsumo(ins.id);
   });
   calcular();
+}
+
+function formatarValorParaInput(valor) {
+  return Number(valor || 0).toFixed(2).replace('.', ',');
+}
+
+function preencherValoresIniciaisAssistente() {
+  const salarioInput = document.getElementById('assistente-salario');
+  const diasInput = document.getElementById('assistente-dias');
+  const horasDiaInput = document.getElementById('assistente-horas-dia');
+  const tempoInput = document.getElementById('assistente-tempo-gasto');
+  const quantidadeInput = document.getElementById('assistente-quantidade');
+
+  if (salarioInput && !salarioInput.value) {
+    salarioInput.value = '';
+  }
+  if (diasInput && !diasInput.value) {
+    diasInput.value = '22';
+  }
+  if (horasDiaInput && !horasDiaInput.value) {
+    horasDiaInput.value = '8';
+  }
+  if (tempoInput && !tempoInput.value) {
+    tempoInput.value = document.getElementById('tempo-trabalhado').value || '';
+  }
+  if (quantidadeInput) {
+    quantidadeInput.value = document.getElementById('rendimento').value || 1;
+  }
+}
+
+function atualizarVisaoAssistente() {
+  const modal = document.getElementById('assistente-mao-obra');
+  if (!modal || modal.getAttribute('aria-hidden') === 'true') return;
+
+  const salarioInput = document.getElementById('assistente-salario');
+  const diasInput = document.getElementById('assistente-dias');
+  const horasDiaInput = document.getElementById('assistente-horas-dia');
+  const horasMesEl = document.getElementById('assistente-horas-mes');
+  const valorHoraEl = document.getElementById('assistente-valor-hora');
+  const titulo = document.getElementById('assistente-titulo');
+
+  if (titulo) {
+    titulo.textContent = 'Quanto vale sua hora';
+  }
+
+  const diasTrabalhados = Math.max(0, parseNum(diasInput?.value || 0));
+  const horasPorDia = Math.max(0, parseNum(horasDiaInput?.value || 0));
+  const horasProdutivasMes = diasTrabalhados * horasPorDia;
+  const salarioMensal = parseNum(salarioInput?.value || 0);
+  const valorHora = horasProdutivasMes > 0 ? salarioMensal / horasProdutivasMes : 0;
+
+  if (horasMesEl) {
+    horasMesEl.textContent = `${diasTrabalhados || 0} × ${horasPorDia || 0} = ${horasProdutivasMes} horas`;
+  }
+  if (valorHoraEl) {
+    valorHoraEl.textContent = `${brl(valorHora)}/h`;
+    valorHoraEl.setAttribute('data-valor-hora', String(valorHora));
+  }
+
+}
+
+function abrirAssistenteMaoObra() {
+  const modal = document.getElementById('assistente-mao-obra');
+  if (!modal) return;
+  preencherValoresIniciaisAssistente();
+  atualizarVisaoAssistente();
+  modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  document.body.classList.add('modal-open');
+}
+
+function fecharAssistenteMaoObra() {
+  const modal = document.getElementById('assistente-mao-obra');
+  if (!modal) return;
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('modal-open');
+}
+
+function aplicarDadosAssistente() {
+  const valorHoraEl = document.getElementById('assistente-valor-hora');
+  const valorHoraInput = document.getElementById('valor-hora');
+
+  if (valorHoraEl && valorHoraInput) {
+    valorHoraInput.value = formatarValorParaInput(valorHoraEl.getAttribute('data-valor-hora') || 0);
+  }
+
+  calcular();
+  fecharAssistenteMaoObra();
 }
 
 
@@ -941,6 +1091,9 @@ function calcular() {
     }
 
     calcular();
+    if (id === 'rendimento') {
+      atualizarVisaoAssistente();
+    }
   });
 
   if (id === 'tempo-trabalhado') {
