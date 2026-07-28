@@ -124,7 +124,7 @@
 
         <div class="rendimento-bloco" id="rendimento-bloco">
           <div class="field">
-            <label class="lbl" for="rendimento">Quantas unidades rende</label>
+            <label class="lbl" for="rendimento">Quantidade produzida</label>
             <input class="inp" type="number" id="rendimento" placeholder="Ex: 50" min="1" step="1" value="1" />
             <p class="hint">Quantas unidades esse lote produz ao todo.</p>
 
@@ -371,12 +371,12 @@
 
         <div class="field">
           <label class="lbl" for="assistente-dias">Dias trabalhados no mês</label>
-          <input class="inp" type="text" id="assistente-dias" placeholder="22" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, ''); atualizarVisaoAssistente();" />
+          <input class="inp" type="text" id="assistente-dias" placeholder="22..." inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, ''); atualizarVisaoAssistente();" />
         </div>
 
         <div class="field">
           <label class="lbl" for="assistente-horas-dia">Horas produtivas por dia</label>
-          <input class="inp" type="text" id="assistente-horas-dia" placeholder="8" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, ''); atualizarVisaoAssistente();" />
+          <input class="inp" type="text" id="assistente-horas-dia" placeholder="8..." inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, ''); atualizarVisaoAssistente();" />
         </div>
 
         <div class="assistente-modal__summary">
@@ -592,10 +592,10 @@ function preencherValoresIniciaisAssistente() {
     salarioInput.value = '';
   }
   if (diasInput && !diasInput.value) {
-    diasInput.value = '22';
+    diasInput.value = '';
   }
   if (horasDiaInput && !horasDiaInput.value) {
-    horasDiaInput.value = '8';
+    horasDiaInput.value = '';
   }
   if (tempoInput && !tempoInput.value) {
     tempoInput.value = document.getElementById('tempo-trabalhado').value || '';
